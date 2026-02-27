@@ -9,10 +9,16 @@ struct DetailView: View {
 
             Divider()
 
-            if viewModel.results.isEmpty {
-                emptyState
-            } else {
-                resultsList
+            ZStack {
+                if viewModel.results.isEmpty {
+                    emptyState
+                } else {
+                    resultsList
+                }
+
+                if viewModel.isProcessing {
+                    processingOverlay
+                }
             }
 
             Divider()
@@ -24,7 +30,9 @@ struct DetailView: View {
     // MARK: - Source File Header
 
     private var sourceFileHeader: some View {
-        HStack(spacing: 12) {
+        @Bindable var vm = viewModel
+
+        return HStack(spacing: 12) {
             Image(systemName: "film")
                 .font(.title2)
                 .foregroundStyle(.secondary)
@@ -40,6 +48,14 @@ struct DetailView: View {
             }
 
             Spacer()
+
+            Picker("Mode", selection: $vm.corruptionMode) {
+                Text("Individual").tag(CorruptionMode.individual)
+                Text("Stacked").tag(CorruptionMode.stacked)
+            }
+            .pickerStyle(.segmented)
+            .frame(width: 170)
+            .help("Individual: one file per type. Stacked: all types in one file.")
 
             if viewModel.hasSelections {
                 Text("\(viewModel.selectedTypes.count) selected")
@@ -60,7 +76,7 @@ struct DetailView: View {
             Image(systemName: "wand.and.stars")
                 .font(.system(size: 36))
                 .foregroundStyle(.secondary)
-            Text("Select corruption types in the sidebar")
+            Text("Select corruption types to begin")
                 .foregroundStyle(.secondary)
             Text("Then click \"Corrupt\" to generate test files")
                 .font(.caption)
@@ -68,6 +84,25 @@ struct DetailView: View {
             Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    // MARK: - Processing Overlay
+
+    private var processingOverlay: some View {
+        VStack(spacing: 16) {
+            ProgressView()
+                .controlSize(.large)
+
+            Text("Corrupting…")
+                .font(.title3)
+                .fontWeight(.medium)
+
+            Text("\(viewModel.selectedTypes.count) type\(viewModel.selectedTypes.count == 1 ? "" : "s") being applied")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(.ultraThinMaterial)
     }
 
     // MARK: - Results List
@@ -81,44 +116,83 @@ struct DetailView: View {
     // MARK: - Bottom Bar
 
     private var bottomBar: some View {
-        HStack {
-            if !viewModel.results.isEmpty {
-                HStack(spacing: 12) {
-                    Label("\(viewModel.successCount) created", systemImage: "checkmark.circle.fill")
-                        .foregroundStyle(.green)
-                    if viewModel.failureCount > 0 {
-                        Label("\(viewModel.failureCount) failed", systemImage: "xmark.circle.fill")
-                            .foregroundStyle(.red)
-                    }
-                }
-                .font(.caption)
+        @Bindable var vm = viewModel
 
-                if let dir = viewModel.outputDirectory {
-                    Button("Reveal in Finder") {
-                        NSWorkspace.shared.selectFile(nil, inFileViewerRootedAtPath: dir.path)
-                    }
-                    .controlSize(.small)
-                }
-            }
-
-            Spacer()
-
-            if viewModel.isProcessing {
-                ProgressView()
-                    .controlSize(.small)
-                    .padding(.trailing, 4)
-                Text("Corrupting...")
+        return VStack(spacing: 8) {
+            // Seed controls row
+            HStack(spacing: 6) {
+                Image(systemName: "die.face.5")
                     .foregroundStyle(.secondary)
-            } else {
-                Button("Corrupt") {
-                    viewModel.selectOutputAndCorrupt()
+                    .font(.caption)
+
+                TextField("Seed", text: $vm.seedText)
+                    .textFieldStyle(.roundedBorder)
+                    .frame(width: 90)
+                    .font(.system(.caption, design: .monospaced))
+                    .onSubmit { viewModel.applySeedFromText() }
+
+                Button {
+                    viewModel.generateNewSeed()
+                } label: {
+                    Image(systemName: "arrow.clockwise")
                 }
-                .controlSize(.large)
-                .keyboardShortcut(.return)
-                .disabled(!viewModel.canCorrupt)
+                .buttonStyle(.borderless)
+                .help("Generate new random seed")
+
+                Button {
+                    viewModel.copySeedToClipboard()
+                } label: {
+                    Image(systemName: "doc.on.doc")
+                }
+                .buttonStyle(.borderless)
+                .help("Copy seed to clipboard")
+
+                Spacer()
             }
+            .padding(.horizontal)
+            .padding(.top, 8)
+
+            // Actions row
+            HStack {
+                if !viewModel.results.isEmpty {
+                    HStack(spacing: 12) {
+                        Label("\(viewModel.successCount) created", systemImage: "checkmark.circle.fill")
+                            .foregroundStyle(.green)
+                        if viewModel.failureCount > 0 {
+                            Label("\(viewModel.failureCount) failed", systemImage: "xmark.circle.fill")
+                                .foregroundStyle(.red)
+                        }
+                    }
+                    .font(.caption)
+
+                    if let dir = viewModel.outputDirectory {
+                        AppKitButton(title: "Reveal in Finder", action: {
+                            NSWorkspace.shared.selectFile(nil, inFileViewerRootedAtPath: dir.path)
+                        })
+                        .appKitControlSize(.small)
+                        .fixedSize()
+                    }
+                }
+
+                Spacer()
+
+                if viewModel.isProcessing {
+                    // Processing indicator now shown as overlay in content area
+                    Text("Processing…")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                } else {
+                    AppKitButton(title: "Corrupt", action: {
+                        viewModel.selectOutputAndCorrupt()
+                    })
+                    .appKitDefault()
+                    .appKitEnabled(viewModel.canCorrupt)
+                    .fixedSize()
+                }
+            }
+            .padding(.horizontal)
+            .padding(.bottom, 8)
         }
-        .padding()
     }
 }
 
@@ -134,8 +208,17 @@ struct ResultRow: View {
                 .foregroundColor(result.isSuccess ? .primary : .red)
 
             VStack(alignment: .leading) {
-                Text(result.corruptionType.label)
-                    .font(.body)
+                HStack(spacing: 4) {
+                    Text(result.corruptionType.label)
+                        .font(.body)
+                    if let severity = result.severity, result.corruptionType.hasSeverityControl {
+                        Text(result.corruptionType.severityDescription(for: severity))
+                            .font(.caption2)
+                            .padding(.horizontal, 4)
+                            .padding(.vertical, 1)
+                            .background(.fill.tertiary, in: Capsule())
+                    }
+                }
                 Text(result.detail)
                     .font(.caption)
                     .foregroundStyle(.secondary)

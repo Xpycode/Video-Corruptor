@@ -194,7 +194,7 @@ struct MXFParser: Sendable {
             if bytes.count > 12 {
                 switch bytes[12] {
                 case 0x15: return .pictureEssence    // MPEG picture
-                case 0x05, 0x06, 0x16: return .pictureEssence  // Other picture types
+                case 0x05, 0x16: return .pictureEssence  // Other picture types
                 case 0x06: return .soundEssence
                 case 0x07: return .soundEssence
                 case 0x17: return .soundEssence      // AES3 audio

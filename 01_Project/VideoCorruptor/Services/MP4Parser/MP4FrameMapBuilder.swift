@@ -43,7 +43,7 @@ struct MP4FrameMapBuilder: Sendable {
         let keyframeSamples = readSyncSamples(stbl: videoStbl, data: data)
 
         // Walk chunks to build per-frame info
-        return buildMap(
+        return try buildMap(
             chunkOffsets: chunkOffsets,
             sampleToChunk: sampleToChunk,
             sampleSizes: sampleSizes,
@@ -191,11 +191,15 @@ struct MP4FrameMapBuilder: Sendable {
         sampleToChunk: [StscEntry],
         sampleSizes: [UInt32],
         keyframeSamples: Set<Int>
-    ) -> [FrameInfo] {
+    ) throws -> [FrameInfo] {
         let allKeyframes = keyframeSamples.isEmpty // empty stss = all keyframes
 
         var frames: [FrameInfo] = []
         frames.reserveCapacity(sampleSizes.count)
+
+        guard !sampleToChunk.isEmpty else {
+            throw FrameMapError.malformedAtom("stsc (no entries)")
+        }
 
         var sampleIndex = 1
         var stscIdx = 0
