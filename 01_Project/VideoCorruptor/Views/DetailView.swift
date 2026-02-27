@@ -81,44 +81,83 @@ struct DetailView: View {
     // MARK: - Bottom Bar
 
     private var bottomBar: some View {
-        HStack {
-            if !viewModel.results.isEmpty {
-                HStack(spacing: 12) {
-                    Label("\(viewModel.successCount) created", systemImage: "checkmark.circle.fill")
-                        .foregroundStyle(.green)
-                    if viewModel.failureCount > 0 {
-                        Label("\(viewModel.failureCount) failed", systemImage: "xmark.circle.fill")
-                            .foregroundStyle(.red)
-                    }
-                }
-                .font(.caption)
+        @Bindable var vm = viewModel
 
-                if let dir = viewModel.outputDirectory {
-                    Button("Reveal in Finder") {
-                        NSWorkspace.shared.selectFile(nil, inFileViewerRootedAtPath: dir.path)
-                    }
-                    .controlSize(.small)
-                }
-            }
-
-            Spacer()
-
-            if viewModel.isProcessing {
-                ProgressView()
-                    .controlSize(.small)
-                    .padding(.trailing, 4)
-                Text("Corrupting...")
+        return VStack(spacing: 8) {
+            // Seed controls row
+            HStack(spacing: 6) {
+                Image(systemName: "die.face.5")
                     .foregroundStyle(.secondary)
-            } else {
-                Button("Corrupt") {
-                    viewModel.selectOutputAndCorrupt()
+                    .font(.caption)
+
+                TextField("Seed", text: $vm.seedText)
+                    .textFieldStyle(.roundedBorder)
+                    .frame(width: 90)
+                    .font(.system(.caption, design: .monospaced))
+                    .onSubmit { viewModel.applySeedFromText() }
+
+                Button {
+                    viewModel.generateNewSeed()
+                } label: {
+                    Image(systemName: "arrow.clockwise")
                 }
-                .controlSize(.large)
-                .keyboardShortcut(.return)
-                .disabled(!viewModel.canCorrupt)
+                .buttonStyle(.borderless)
+                .help("Generate new random seed")
+
+                Button {
+                    viewModel.copySeedToClipboard()
+                } label: {
+                    Image(systemName: "doc.on.doc")
+                }
+                .buttonStyle(.borderless)
+                .help("Copy seed to clipboard")
+
+                Spacer()
             }
+            .padding(.horizontal)
+            .padding(.top, 8)
+
+            // Actions row
+            HStack {
+                if !viewModel.results.isEmpty {
+                    HStack(spacing: 12) {
+                        Label("\(viewModel.successCount) created", systemImage: "checkmark.circle.fill")
+                            .foregroundStyle(.green)
+                        if viewModel.failureCount > 0 {
+                            Label("\(viewModel.failureCount) failed", systemImage: "xmark.circle.fill")
+                                .foregroundStyle(.red)
+                        }
+                    }
+                    .font(.caption)
+
+                    if let dir = viewModel.outputDirectory {
+                        Button("Reveal in Finder") {
+                            NSWorkspace.shared.selectFile(nil, inFileViewerRootedAtPath: dir.path)
+                        }
+                        .controlSize(.small)
+                    }
+                }
+
+                Spacer()
+
+                if viewModel.isProcessing {
+                    ProgressView()
+                        .controlSize(.small)
+                        .padding(.trailing, 4)
+                    Text("Corrupting...")
+                        .foregroundStyle(.secondary)
+                } else {
+                    Button("Corrupt") {
+                        viewModel.selectOutputAndCorrupt()
+                    }
+                    .controlSize(.large)
+                    .keyboardShortcut(.return)
+                    .disabled(!viewModel.canCorrupt)
+                }
+            }
+            .padding(.horizontal)
+            .padding(.bottom, 8)
         }
-        .padding()
     }
 }
 
@@ -134,8 +173,17 @@ struct ResultRow: View {
                 .foregroundColor(result.isSuccess ? .primary : .red)
 
             VStack(alignment: .leading) {
-                Text(result.corruptionType.label)
-                    .font(.body)
+                HStack(spacing: 4) {
+                    Text(result.corruptionType.label)
+                        .font(.body)
+                    if let severity = result.severity, result.corruptionType.hasSeverityControl {
+                        Text(result.corruptionType.severityDescription(for: severity))
+                            .font(.caption2)
+                            .padding(.horizontal, 4)
+                            .padding(.vertical, 1)
+                            .background(.fill.tertiary, in: Capsule())
+                    }
+                }
                 Text(result.detail)
                     .font(.caption)
                     .foregroundStyle(.secondary)

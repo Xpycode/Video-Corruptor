@@ -158,26 +158,93 @@ enum CorruptionType: String, CaseIterable, Identifiable, Sendable {
 
     /// Short description of the corruption result for display in results list.
     var resultDescription: String {
+        resultDescription(for: .moderate)
+    }
+
+    /// Result description adjusted for the applied severity.
+    func resultDescription(for severity: CorruptionSeverity) -> String {
+        let pct = Int(severity.intensity * 100)
         switch self {
-        case .truncation: "File truncated at 60% of original size"
-        case .corruptHeader: "ftyp atom type field overwritten with random bytes"
-        case .timestampGap: "stts sample durations corrupted to create timestamp discontinuity"
-        case .decodeError: "~1% of mdat bytes flipped to cause decode failures"
-        case .missingVideoTrack: "Video trak atom type zeroed out"
-        case .missingAudioTrack: "Audio trak atom type zeroed out"
-        case .containerStructure: "moov atom size inflated to create malformed structure"
-        case .zeroByteFile: "Empty file created with original extension"
-        case .fakeExtension: "1KB of random data written with video extension"
-        case .chunkOffsetShift: "stco/co64 chunk offsets shifted by random 1-50 bytes"
-        case .keyframeRemoval: "stss sync sample entry count set to zero"
-        case .sampleSizeCorruption: "~10% of stsz sample size entries corrupted"
-        case .iFrameDatamosh: "IDR NAL types changed to non-IDR for datamosh effect"
-        case .targetedFrameCorruption: "~5% of keyframe NAL bytes flipped (headers preserved)"
-        case .mxfEssenceCorruption: "~2% of picture essence payload bytes XORed"
-        case .mxfKLVKeyCorruption: "Item-type byte altered in ~30% of picture essence KLV keys"
-        case .mxfBERLengthManipulation: "BER value lengths shortened by 10-50%"
-        case .mxfPartitionBreakage: "FooterPartition offset zeroed in header partition pack"
-        case .mxfIndexScrambling: "8-byte blocks swapped within index table segment values"
+        case .truncation:
+            let kept = Int((1.0 - severity.intensity * 0.99) * 100)
+            return "File truncated, keeping \(kept)% of original"
+        case .corruptHeader:
+            return "ftyp atom type field overwritten with random bytes"
+        case .timestampGap:
+            return "stts sample durations corrupted to create timestamp discontinuity"
+        case .decodeError:
+            return "~\(max(1, pct))% of mdat bytes flipped to cause decode failures"
+        case .missingVideoTrack:
+            return "Video trak atom type zeroed out"
+        case .missingAudioTrack:
+            return "Audio trak atom type zeroed out"
+        case .containerStructure:
+            return "moov atom size inflated to create malformed structure"
+        case .zeroByteFile:
+            return "Empty file created with original extension"
+        case .fakeExtension:
+            return "1KB of random data written with video extension"
+        case .chunkOffsetShift:
+            let maxShift = Int(1 + severity.intensity * 499)
+            return "stco/co64 chunk offsets shifted by 1-\(maxShift) bytes"
+        case .keyframeRemoval:
+            return "stss sync sample entry count set to zero"
+        case .sampleSizeCorruption:
+            return "~\(max(1, pct))% of stsz sample size entries corrupted"
+        case .iFrameDatamosh:
+            return "IDR NAL types changed to non-IDR for datamosh effect"
+        case .targetedFrameCorruption:
+            return "~\(max(1, pct / 2))% of keyframe NAL bytes flipped (headers preserved)"
+        case .mxfEssenceCorruption:
+            return "~\(max(1, pct * 30 / 100))% of picture essence payload bytes XORed"
+        case .mxfKLVKeyCorruption:
+            let klvPct = Int(5 + severity.intensity * 95)
+            return "Item-type byte altered in ~\(klvPct)% of picture essence KLV keys"
+        case .mxfBERLengthManipulation:
+            let reduction = Int(5 + severity.intensity * 90)
+            return "BER value lengths shortened by \(reduction)%"
+        case .mxfPartitionBreakage:
+            return "FooterPartition offset zeroed in header partition pack"
+        case .mxfIndexScrambling:
+            return "8-byte blocks swapped within index table segment values"
+        }
+    }
+
+    /// Corruption phase for stacking order (inner -> outer).
+    var phase: CorruptionPhase {
+        switch self {
+        case .iFrameDatamosh, .targetedFrameCorruption, .mxfEssenceCorruption:
+            .bitstream
+        case .chunkOffsetShift, .keyframeRemoval, .sampleSizeCorruption, .mxfIndexScrambling:
+            .indexTable
+        case .timestampGap, .decodeError, .mxfKLVKeyCorruption, .mxfBERLengthManipulation:
+            .stream
+        case .corruptHeader, .containerStructure, .missingVideoTrack, .missingAudioTrack, .mxfPartitionBreakage:
+            .container
+        case .truncation, .zeroByteFile, .fakeExtension:
+            .file
+        }
+    }
+
+    /// Whether this type supports a severity slider (vs binary on/off).
+    var hasSeverityControl: Bool {
+        switch self {
+        case .truncation, .decodeError, .chunkOffsetShift, .sampleSizeCorruption,
+             .targetedFrameCorruption, .mxfEssenceCorruption, .mxfKLVKeyCorruption,
+             .mxfBERLengthManipulation:
+            true
+        default:
+            false
+        }
+    }
+
+    /// Human-readable severity description for the given intensity.
+    func severityDescription(for severity: CorruptionSeverity) -> String {
+        switch severity.intensity {
+        case ..<0.25: "Subtle"
+        case ..<0.55: "Moderate"
+        case ..<0.85: "Heavy"
+        default: "Extreme"
         }
     }
 }

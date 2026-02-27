@@ -11,5 +11,6 @@ protocol CorruptionHandler: Sendable {
     ///   - type: The corruption to apply.
     ///   - url: The output file (already copied from source).
     ///   - sourceFile: The original source file metadata.
-    func apply(_ type: CorruptionType, to url: URL, sourceFile: VideoFile) throws
+    ///   - context: Mutable context carrying the seeded RNG and severity.
+    func apply(_ type: CorruptionType, to url: URL, sourceFile: VideoFile, context: inout CorruptionContext) throws
 }

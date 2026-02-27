@@ -17,11 +17,11 @@ struct MP4Corruptor: CorruptionHandler {
     private let parser = MP4Parser()
     private let frameMapBuilder = MP4FrameMapBuilder()
 
-    func apply(_ type: CorruptionType, to url: URL, sourceFile: VideoFile) throws {
+    func apply(_ type: CorruptionType, to url: URL, sourceFile: VideoFile, context: inout CorruptionContext) throws {
         switch type {
         // Container
         case .corruptHeader:
-            try applyHeaderCorruption(to: url)
+            try applyHeaderCorruption(to: url, context: &context)
         case .containerStructure:
             try applyContainerCorruption(to: url)
         case .missingVideoTrack:
@@ -30,21 +30,21 @@ struct MP4Corruptor: CorruptionHandler {
             try applyTrackRemoval(to: url, removeVideo: false)
         // Stream
         case .timestampGap:
-            try applyTimestampCorruption(to: url)
+            try applyTimestampCorruption(to: url, context: &context)
         case .decodeError:
-            try applyByteFlip(to: url)
+            try applyByteFlip(to: url, context: &context)
         // Index table
         case .chunkOffsetShift:
-            try applyChunkOffsetShift(to: url)
+            try applyChunkOffsetShift(to: url, context: &context)
         case .keyframeRemoval:
             try applyKeyframeRemoval(to: url)
         case .sampleSizeCorruption:
-            try applySampleSizeCorruption(to: url)
+            try applySampleSizeCorruption(to: url, context: &context)
         // Bitstream
         case .iFrameDatamosh:
             try applyIFrameDatamosh(to: url)
         case .targetedFrameCorruption:
-            try applyTargetedFrameCorruption(to: url)
+            try applyTargetedFrameCorruption(to: url, context: &context)
         default:
             break
         }
@@ -53,12 +53,13 @@ struct MP4Corruptor: CorruptionHandler {
     // MARK: - Container Corruptions
 
     /// Overwrite bytes in the ftyp atom header area.
-    private func applyHeaderCorruption(to url: URL) throws {
+    private func applyHeaderCorruption(to url: URL, context: inout CorruptionContext) throws {
         var data = try Data(contentsOf: url)
 
         if data.count > 12 {
+            // Binary corruption — no severity scaling (always corrupts header)
             for i in 4..<min(8, data.count) {
-                data[i] = UInt8.random(in: 0...255)
+                data[i] = UInt8.random(in: 0...255, using: &context.rng)
             }
         }
 
@@ -118,7 +119,7 @@ struct MP4Corruptor: CorruptionHandler {
     // MARK: - Stream Corruptions
 
     /// Corrupt the stts atom to create timestamp discontinuities.
-    private func applyTimestampCorruption(to url: URL) throws {
+    private func applyTimestampCorruption(to url: URL, context: inout CorruptionContext) throws {
         let atoms = try parser.parse(url: url)
         let sttsAtoms = parser.findAtoms(type: "stts", in: atoms)
 
@@ -137,7 +138,7 @@ struct MP4Corruptor: CorruptionHandler {
         let entriesStart = payloadStart + 8
         if entriesStart + 8 <= payloadEnd {
             for i in (entriesStart + 4)..<min(entriesStart + 8, payloadEnd) {
-                data[i] = UInt8.random(in: 100...255)
+                data[i] = UInt8.random(in: 100...255, using: &context.rng)
             }
         }
 
@@ -145,7 +146,7 @@ struct MP4Corruptor: CorruptionHandler {
     }
 
     /// Flip random bytes inside the mdat atom.
-    private func applyByteFlip(to url: URL) throws {
+    private func applyByteFlip(to url: URL, context: inout CorruptionContext) throws {
         let atoms = try parser.parse(url: url)
         let mdatAtoms = parser.findAtoms(type: "mdat", in: atoms)
 
@@ -162,9 +163,11 @@ struct MP4Corruptor: CorruptionHandler {
             throw CorruptionError.atomTooSmall("mdat")
         }
 
-        let flipCount = max(10, payloadLength / 100)
+        // Severity: 0.1% (subtle) -> 50% (extreme) of mdat bytes flipped
+        let fraction = 0.001 + context.severity.intensity * 0.499
+        let flipCount = max(10, Int(Double(payloadLength) * fraction))
         for _ in 0..<flipCount {
-            let idx = payloadStart + Int.random(in: 0..<payloadLength)
+            let idx = payloadStart + Int.random(in: 0..<payloadLength, using: &context.rng)
             data[idx] = data[idx] ^ 0xFF
         }
 
@@ -174,11 +177,13 @@ struct MP4Corruptor: CorruptionHandler {
     // MARK: - Index Table Corruptions
 
     /// Shift all stco/co64 chunk offsets by 1-50 bytes.
-    private func applyChunkOffsetShift(to url: URL) throws {
+    private func applyChunkOffsetShift(to url: URL, context: inout CorruptionContext) throws {
         let atoms = try parser.parse(url: url)
         var data = try Data(contentsOf: url)
 
-        let shift = UInt32.random(in: 1...50)
+        // Severity: 1-5 (subtle) -> 100-500 (extreme) byte shift
+        let maxShift = UInt32(1 + context.severity.intensity * 499)
+        let shift = UInt32.random(in: 1...max(1, maxShift), using: &context.rng)
 
         // Try stco first
         let stcoAtoms = parser.findAtoms(type: "stco", in: atoms)
@@ -238,7 +243,7 @@ struct MP4Corruptor: CorruptionHandler {
     }
 
     /// Corrupt ~10% of stsz sample size entries.
-    private func applySampleSizeCorruption(to url: URL) throws {
+    private func applySampleSizeCorruption(to url: URL, context: inout CorruptionContext) throws {
         let atoms = try parser.parse(url: url)
         let stszAtoms = parser.findAtoms(type: "stsz", in: atoms)
 
@@ -257,21 +262,24 @@ struct MP4Corruptor: CorruptionHandler {
         // Only corrupt if variable-size entries exist
         guard uniformSize == 0, sampleCount > 0 else {
             // Uniform size: corrupt the uniform value
-            let corruptedSize = UInt32.random(in: 1...100)
+            let corruptedSize = UInt32.random(in: 1...100, using: &context.rng)
             data.writeUInt32BE(corruptedSize, at: payloadStart + 4)
             try data.write(to: url)
             return
         }
 
-        // Corrupt ~10% of entries
-        let corruptCount = max(1, Int(sampleCount) / 10)
-        let indices = (0..<Int(sampleCount)).shuffled().prefix(corruptCount)
+        // Severity: 1% (subtle) -> 100% (extreme) of entries corrupted
+        let fraction = max(0.01, Double(context.severity.intensity))
+        let corruptCount = max(1, Int(Double(sampleCount) * fraction))
+        var indices = Array(0..<Int(sampleCount))
+        indices.shuffle(using: &context.rng)
+        let targets = indices.prefix(corruptCount)
 
-        for i in indices {
+        for i in targets {
             let entryOffset = payloadStart + 12 + i * 4
             guard let original = data.readUInt32BE(at: entryOffset) else { continue }
             // Randomly double or halve the size
-            let corrupted = Bool.random() ? original &* 2 : original / 2
+            let corrupted = Bool.random(using: &context.rng) ? original &* 2 : original / 2
             data.writeUInt32BE(max(1, corrupted), at: entryOffset)
         }
 
@@ -309,7 +317,7 @@ struct MP4Corruptor: CorruptionHandler {
                 // Check NAL type (lower 5 bits of first byte)
                 let nalType = data[nalStart] & 0x1F
                 if nalType == 5 {
-                    // IDR slice → change to non-IDR (type 1)
+                    // IDR slice -> change to non-IDR (type 1)
                     data[nalStart] = (data[nalStart] & 0xE0) | 0x01
                 }
 
@@ -321,7 +329,7 @@ struct MP4Corruptor: CorruptionHandler {
     }
 
     /// Flip ~5% of bytes in keyframe NALs, skipping first 20 bytes (slice header).
-    private func applyTargetedFrameCorruption(to url: URL) throws {
+    private func applyTargetedFrameCorruption(to url: URL, context: inout CorruptionContext) throws {
         let frames = try frameMapBuilder.buildFrameMap(from: url)
         var data = try Data(contentsOf: url)
 
@@ -349,10 +357,12 @@ struct MP4Corruptor: CorruptionHandler {
                     let corruptStart = nalStart + 20  // Skip slice header
                     let corruptLength = nalEnd - corruptStart
                     if corruptLength > 0 {
-                        let flipCount = max(1, corruptLength / 20) // ~5%
+                        // Severity: 0.5% (subtle) -> 50% (extreme)
+                        let flipFraction = 0.005 + context.severity.intensity * 0.495
+                        let flipCount = max(1, Int(Double(corruptLength) * flipFraction))
                         for _ in 0..<flipCount {
-                            let idx = corruptStart + Int.random(in: 0..<corruptLength)
-                            data[idx] = data[idx] ^ UInt8.random(in: 1...255)
+                            let idx = corruptStart + Int.random(in: 0..<corruptLength, using: &context.rng)
+                            data[idx] = data[idx] ^ UInt8.random(in: 1...255, using: &context.rng)
                         }
                     }
                 }

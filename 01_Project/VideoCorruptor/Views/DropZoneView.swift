@@ -21,10 +21,19 @@ struct DropZoneView: View {
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
 
-            Button("Choose File...") {
-                viewModel.openFilePicker()
+            HStack(spacing: 12) {
+                Button("Choose File...") {
+                    viewModel.openFilePicker()
+                }
+                .controlSize(.large)
+
+                Button("Batch Mode...") {
+                    viewModel.isBatchMode = true
+                    viewModel.batchViewModel.openFilePicker()
+                }
+                .controlSize(.large)
+                .buttonStyle(.bordered)
             }
-            .controlSize(.large)
 
             Spacer()
         }

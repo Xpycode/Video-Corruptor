@@ -14,6 +14,20 @@ final class CorruptorViewModel {
     var outputDirectory: URL?
     var errorMessage: String?
 
+    // Seed
+    var seedText: String = SeedFormatting.format(SeedFormatting.randomSeed())
+    var currentSeed: UInt64 = SeedFormatting.randomSeed()
+
+    // Severity
+    var severities: [CorruptionType: CorruptionSeverity] = [:]
+
+    // Mode
+    var corruptionMode: CorruptionMode = .individual
+
+    // Batch
+    var isBatchMode = false
+    let batchViewModel = BatchViewModel()
+
     // MARK: - Computed
 
     var hasSource: Bool { sourceFile != nil }
@@ -40,11 +54,60 @@ final class CorruptorViewModel {
         return CorruptionCategory.allCases.filter { available.contains($0) }
     }
 
+    /// Detect conflicts for current selection in stacked mode.
+    var activeConflicts: [CorruptionConflict] {
+        guard corruptionMode == .stacked else { return [] }
+        return CorruptionConflict.detect(in: selectedTypes)
+    }
+
+    /// Whether there are any blocker-level conflicts.
+    var hasBlockerConflicts: Bool {
+        activeConflicts.contains { $0.severity == .blocker }
+    }
+
     // MARK: - Engine
 
     private let engine = CorruptionEngine()
 
-    // MARK: - Actions
+    // MARK: - Seed Actions
+
+    func generateNewSeed() {
+        currentSeed = SeedFormatting.randomSeed()
+        seedText = SeedFormatting.format(currentSeed)
+    }
+
+    func applySeedFromText() {
+        if let parsed = SeedFormatting.parse(seedText) {
+            currentSeed = parsed
+            seedText = SeedFormatting.format(parsed)
+        } else {
+            // Revert to current seed
+            seedText = SeedFormatting.format(currentSeed)
+        }
+    }
+
+    func copySeedToClipboard() {
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(seedText, forType: .string)
+    }
+
+    // MARK: - Severity Actions
+
+    func severity(for type: CorruptionType) -> CorruptionSeverity {
+        severities[type] ?? .moderate
+    }
+
+    func setSeverity(_ severity: CorruptionSeverity, for type: CorruptionType) {
+        severities[type] = severity
+    }
+
+    func applyGlobalSeverity(_ severity: CorruptionSeverity) {
+        for type in selectedTypes where type.hasSeverityControl {
+            severities[type] = severity
+        }
+    }
+
+    // MARK: - Source Actions
 
     func handleDrop(providers: [NSItemProvider]) -> Bool {
         guard let provider = providers.first else { return false }
@@ -158,12 +221,31 @@ final class CorruptorViewModel {
         isProcessing = true
         results = []
 
+        // Sync seed from text field
+        applySeedFromText()
+
         let types = Array(selectedTypes).sorted { $0.rawValue < $1.rawValue }
-        results = await engine.corrupt(
-            source: source,
-            types: types,
-            outputDirectory: outputDir
-        )
+
+        switch corruptionMode {
+        case .individual:
+            results = await engine.corrupt(
+                source: source,
+                types: types,
+                outputDirectory: outputDir,
+                masterSeed: currentSeed,
+                severities: severities,
+                mode: .individual
+            )
+        case .stacked:
+            let result = await engine.corruptStacked(
+                source: source,
+                types: types,
+                outputDirectory: outputDir,
+                masterSeed: currentSeed,
+                severities: severities
+            )
+            results = [result]
+        }
 
         isProcessing = false
     }

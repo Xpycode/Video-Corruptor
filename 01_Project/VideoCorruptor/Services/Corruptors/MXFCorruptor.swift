@@ -13,21 +13,21 @@ struct MXFCorruptor: CorruptionHandler {
 
     private let mxfParser = MXFParser()
 
-    func apply(_ type: CorruptionType, to url: URL, sourceFile: VideoFile) throws {
+    func apply(_ type: CorruptionType, to url: URL, sourceFile: VideoFile, context: inout CorruptionContext) throws {
         let elements = try mxfParser.scan(url: url)
         var data = try Data(contentsOf: url)
 
         switch type {
         case .mxfEssenceCorruption:
-            try applyEssenceCorruption(elements: elements, data: &data)
+            try applyEssenceCorruption(elements: elements, data: &data, context: &context)
         case .mxfKLVKeyCorruption:
-            applyKLVKeyCorruption(elements: elements, data: &data)
+            applyKLVKeyCorruption(elements: elements, data: &data, context: &context)
         case .mxfBERLengthManipulation:
-            try applyBERLengthManipulation(elements: elements, data: &data)
+            try applyBERLengthManipulation(elements: elements, data: &data, context: &context)
         case .mxfPartitionBreakage:
             try applyPartitionBreakage(elements: elements, data: &data)
         case .mxfIndexScrambling:
-            try applyIndexScrambling(elements: elements, data: &data)
+            try applyIndexScrambling(elements: elements, data: &data, context: &context)
         default:
             break
         }
@@ -38,25 +38,27 @@ struct MXFCorruptor: CorruptionHandler {
     // MARK: - Essence Corruption
 
     /// XOR ~2% of bytes in picture essence payloads, skipping first 64-128 bytes (codec header).
-    private func applyEssenceCorruption(elements: [MXFElement], data: inout Data) throws {
+    private func applyEssenceCorruption(elements: [MXFElement], data: inout Data, context: inout CorruptionContext) throws {
         let pictureElements = elements.filter { $0.classification == .pictureEssence }
         guard !pictureElements.isEmpty else {
             throw CorruptionError.atomNotFound("picture essence elements")
         }
 
         for element in pictureElements {
-            let skipBytes = Int.random(in: 64...128)
+            let skipBytes = Int.random(in: 64...128, using: &context.rng)
             let valueStart = Int(element.valueOffset) + skipBytes
             let valueEnd = Int(element.valueOffset + element.valueLength)
 
             guard valueStart < valueEnd, valueEnd <= data.count else { continue }
 
             let corruptLength = valueEnd - valueStart
-            let corruptCount = max(1, corruptLength / 50) // ~2%
+            // Severity: 0.5% (subtle) -> 30% (extreme)
+            let fraction = 0.005 + context.severity.intensity * 0.295
+            let corruptCount = max(1, Int(Double(corruptLength) * fraction))
 
             for _ in 0..<corruptCount {
-                let idx = valueStart + Int.random(in: 0..<corruptLength)
-                data[idx] = data[idx] ^ UInt8.random(in: 1...255)
+                let idx = valueStart + Int.random(in: 0..<corruptLength, using: &context.rng)
+                data[idx] = data[idx] ^ UInt8.random(in: 1...255, using: &context.rng)
             }
         }
     }
@@ -64,10 +66,14 @@ struct MXFCorruptor: CorruptionHandler {
     // MARK: - KLV Key Corruption
 
     /// Change byte 12 (item type) in ~30% of picture essence KLV keys.
-    private func applyKLVKeyCorruption(elements: [MXFElement], data: inout Data) {
+    private func applyKLVKeyCorruption(elements: [MXFElement], data: inout Data, context: inout CorruptionContext) {
         let pictureElements = elements.filter { $0.classification == .pictureEssence }
-        let targetCount = max(1, pictureElements.count * 30 / 100)
-        let targets = pictureElements.shuffled().prefix(targetCount)
+        // Severity: 5% (subtle) -> 100% (extreme) of KLV keys corrupted
+        let klvFraction = 0.05 + context.severity.intensity * 0.95
+        let targetCount = max(1, Int(Double(pictureElements.count) * klvFraction))
+        var shuffled = pictureElements
+        shuffled.shuffle(using: &context.rng)
+        let targets = shuffled.prefix(targetCount)
 
         for element in targets {
             let byte12Offset = Int(element.keyOffset) + 12
@@ -80,7 +86,7 @@ struct MXFCorruptor: CorruptionHandler {
     // MARK: - BER Length Manipulation
 
     /// Shorten BER-encoded value lengths by 10-50%.
-    private func applyBERLengthManipulation(elements: [MXFElement], data: inout Data) throws {
+    private func applyBERLengthManipulation(elements: [MXFElement], data: inout Data, context: inout CorruptionContext) throws {
         let pictureElements = elements.filter { $0.classification == .pictureEssence }
         guard !pictureElements.isEmpty else {
             throw CorruptionError.atomNotFound("picture essence elements")
@@ -88,7 +94,10 @@ struct MXFCorruptor: CorruptionHandler {
 
         for element in pictureElements {
             let berStart = Int(element.keyOffset) + 16  // BER starts after 16-byte key
-            let reductionFactor = Double.random(in: 0.50...0.90)  // Keep 50-90% of length
+            // Severity: keep 95% (subtle) -> keep 5% (extreme)
+            let keepMax = 0.95 - context.severity.intensity * 0.90
+            let keepMin = max(0.05, keepMax - 0.15)
+            let reductionFactor = Double.random(in: keepMin...keepMax, using: &context.rng)
             let newLength = UInt64(Double(element.valueLength) * reductionFactor)
 
             // Re-encode the BER length in-place
@@ -154,7 +163,7 @@ struct MXFCorruptor: CorruptionHandler {
     // MARK: - Index Scrambling
 
     /// Swap 8-byte blocks within index table segment values.
-    private func applyIndexScrambling(elements: [MXFElement], data: inout Data) throws {
+    private func applyIndexScrambling(elements: [MXFElement], data: inout Data, context: inout CorruptionContext) throws {
         let indexElements = elements.filter { $0.classification == .indexTable }
         guard !indexElements.isEmpty else {
             throw CorruptionError.atomNotFound("index table segments")
@@ -178,8 +187,8 @@ struct MXFCorruptor: CorruptionHandler {
             // Swap random pairs of 8-byte blocks
             let swapCount = max(1, blocks.count / 4)
             for _ in 0..<swapCount {
-                let a = blocks.randomElement()!
-                let b = blocks.randomElement()!
+                let a = blocks.randomElement(using: &context.rng)!
+                let b = blocks.randomElement(using: &context.rng)!
                 guard a != b else { continue }
 
                 for i in 0..<8 {
