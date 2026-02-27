@@ -176,7 +176,7 @@ final class BatchViewModel {
             // Write manifest
             writeBatchManifest(to: dir, masterSeed: masterSeed)
 
-            overallProgress = 1.0
+            overallProgress = Double(completedCount) / Double(max(1, totalCount))
             isProcessing = false
         }
     }

@@ -32,7 +32,7 @@ final class CorruptorViewModel {
 
     var hasSource: Bool { sourceFile != nil }
     var hasSelections: Bool { !selectedTypes.isEmpty }
-    var canCorrupt: Bool { hasSource && hasSelections && !isProcessing }
+    var canCorrupt: Bool { hasSource && hasSelections && !isProcessing && !hasBlockerConflicts }
 
     var successCount: Int { results.filter(\.isSuccess).count }
     var failureCount: Int { results.filter { !$0.isSuccess }.count }
