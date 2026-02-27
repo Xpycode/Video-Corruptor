@@ -3,7 +3,6 @@ import Foundation
 /// Orchestrates corruption operations on video files.
 /// Always works on copies — never modifies the original.
 /// Dispatches to format-specific CorruptionHandler implementations.
-@MainActor
 final class CorruptionEngine: Sendable {
 
     private let handlers: [any CorruptionHandler] = [
@@ -212,6 +211,7 @@ final class CorruptionEngine: Sendable {
                 return
             }
         }
+        throw CorruptionError.unsupportedType(type.rawValue)
     }
 
     /// Determine the output file extension.
@@ -223,11 +223,13 @@ final class CorruptionEngine: Sendable {
 enum CorruptionError: Error, LocalizedError {
     case atomNotFound(String)
     case atomTooSmall(String)
+    case unsupportedType(String)
 
     var errorDescription: String? {
         switch self {
         case .atomNotFound(let type): "Required atom '\(type)' not found in container"
         case .atomTooSmall(let type): "Atom '\(type)' is too small to corrupt meaningfully"
+        case .unsupportedType(let type): "No handler supports corruption type '\(type)'"
         }
     }
 }
