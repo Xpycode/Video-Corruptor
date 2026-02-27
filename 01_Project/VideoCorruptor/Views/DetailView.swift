@@ -9,10 +9,16 @@ struct DetailView: View {
 
             Divider()
 
-            if viewModel.results.isEmpty {
-                emptyState
-            } else {
-                resultsList
+            ZStack {
+                if viewModel.results.isEmpty {
+                    emptyState
+                } else {
+                    resultsList
+                }
+
+                if viewModel.isProcessing {
+                    processingOverlay
+                }
             }
 
             Divider()
@@ -24,7 +30,9 @@ struct DetailView: View {
     // MARK: - Source File Header
 
     private var sourceFileHeader: some View {
-        HStack(spacing: 12) {
+        @Bindable var vm = viewModel
+
+        return HStack(spacing: 12) {
             Image(systemName: "film")
                 .font(.title2)
                 .foregroundStyle(.secondary)
@@ -40,6 +48,14 @@ struct DetailView: View {
             }
 
             Spacer()
+
+            Picker("Mode", selection: $vm.corruptionMode) {
+                Text("Individual").tag(CorruptionMode.individual)
+                Text("Stacked").tag(CorruptionMode.stacked)
+            }
+            .pickerStyle(.segmented)
+            .frame(width: 170)
+            .help("Individual: one file per type. Stacked: all types in one file.")
 
             if viewModel.hasSelections {
                 Text("\(viewModel.selectedTypes.count) selected")
@@ -60,7 +76,7 @@ struct DetailView: View {
             Image(systemName: "wand.and.stars")
                 .font(.system(size: 36))
                 .foregroundStyle(.secondary)
-            Text("Select corruption types in the sidebar")
+            Text("Select corruption types to begin")
                 .foregroundStyle(.secondary)
             Text("Then click \"Corrupt\" to generate test files")
                 .font(.caption)
@@ -68,6 +84,25 @@ struct DetailView: View {
             Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    // MARK: - Processing Overlay
+
+    private var processingOverlay: some View {
+        VStack(spacing: 16) {
+            ProgressView()
+                .controlSize(.large)
+
+            Text("Corrupting…")
+                .font(.title3)
+                .fontWeight(.medium)
+
+            Text("\(viewModel.selectedTypes.count) type\(viewModel.selectedTypes.count == 1 ? "" : "s") being applied")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(.ultraThinMaterial)
     }
 
     // MARK: - Results List
@@ -131,28 +166,28 @@ struct DetailView: View {
                     .font(.caption)
 
                     if let dir = viewModel.outputDirectory {
-                        Button("Reveal in Finder") {
+                        AppKitButton(title: "Reveal in Finder", action: {
                             NSWorkspace.shared.selectFile(nil, inFileViewerRootedAtPath: dir.path)
-                        }
-                        .controlSize(.small)
+                        })
+                        .appKitControlSize(.small)
+                        .fixedSize()
                     }
                 }
 
                 Spacer()
 
                 if viewModel.isProcessing {
-                    ProgressView()
-                        .controlSize(.small)
-                        .padding(.trailing, 4)
-                    Text("Corrupting...")
+                    // Processing indicator now shown as overlay in content area
+                    Text("Processing…")
+                        .font(.caption)
                         .foregroundStyle(.secondary)
                 } else {
-                    Button("Corrupt") {
+                    AppKitButton(title: "Corrupt", action: {
                         viewModel.selectOutputAndCorrupt()
-                    }
-                    .controlSize(.large)
-                    .keyboardShortcut(.return)
-                    .disabled(!viewModel.canCorrupt)
+                    })
+                    .appKitDefault()
+                    .appKitEnabled(viewModel.canCorrupt)
+                    .fixedSize()
                 }
             }
             .padding(.horizontal)

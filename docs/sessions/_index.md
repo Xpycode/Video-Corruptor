@@ -10,6 +10,11 @@ VideoCorruptor - macOS tool for generating corrupted video test files
 
 | Date | Focus | Outcome | Log |
 |------|-------|---------|-----|
+| 2026-02-27e | UI polish: AppKit controls | AppKitButton + AppKitToolbarButtonStyle, mode picker moved, processing overlay | [log](2026-02-27e.md) |
+| 2026-02-27d | Reliability hardening | 9/9 fixes applied (2 critical, 4 high, 3 medium), clean build, pushed | [log](2026-02-27.md) |
+| 2026-02-27c | Code review & fix plan | Verified 9 issues, rejected 3 false claims, saved fix plan | [log](2026-02-27.md) |
+| 2026-02-27b | Docs & GitHub sync | Full README pushed to GitHub | [log](2026-02-27.md) |
+| 2026-02-27 | Seed, severity, stacking, batch | 4 production features implemented, +1763 lines, clean build | [log](2026-02-27.md) |
 | 2026-02-26d | Corruption expansion plan | Full 8-wave plan: 22 new types (19→41), parser gaps, fMP4/HEVC/AAC research | [log](2026-02-26.md) |
 | 2026-02-26c | MP4/MOV + MXF implementation | 10 new corruption types, MXF parser, frame map builder, engine refactor | [log](2026-02-26.md) |
 | 2026-02-26b | Video corruption research | Deep research: MP4/MOV/MXF structures, glitch art techniques, 7-category taxonomy | [log](2026-02-26.md) |

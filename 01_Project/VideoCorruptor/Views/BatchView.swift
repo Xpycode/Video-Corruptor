@@ -84,10 +84,10 @@ struct BatchView: View {
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
 
-            Button("Add Files...") {
+            AppKitButton(title: "Add Files…", action: {
                 batch.openFilePicker()
-            }
-            .controlSize(.large)
+            })
+            .fixedSize()
 
             Spacer()
         }
@@ -111,15 +111,17 @@ struct BatchView: View {
     private func batchBottomBar(batch: BatchViewModel) -> some View {
         HStack {
             if !batch.jobs.isEmpty && !batch.isProcessing {
-                Button("Add Files...") {
+                AppKitButton(title: "Add Files…", action: {
                     batch.openFilePicker()
-                }
-                .controlSize(.small)
+                })
+                .appKitControlSize(.small)
+                .fixedSize()
 
-                Button("Clear Queue") {
+                AppKitButton(title: "Clear Queue", action: {
                     batch.clearQueue()
-                }
-                .controlSize(.small)
+                })
+                .appKitControlSize(.small)
+                .fixedSize()
             }
 
             Spacer()
@@ -137,12 +139,12 @@ struct BatchView: View {
             .controlSize(.small)
 
             if batch.isProcessing {
-                Button("Cancel") {
+                AppKitButton(title: "Cancel", action: {
                     batch.cancelBatch()
-                }
-                .controlSize(.large)
+                })
+                .fixedSize()
             } else {
-                Button("Start Batch") {
+                AppKitButton(title: "Start Batch", action: {
                     viewModel.applySeedFromText()
                     batch.startBatch(
                         types: viewModel.selectedTypes,
@@ -150,10 +152,10 @@ struct BatchView: View {
                         severities: viewModel.severities,
                         mode: viewModel.corruptionMode
                     )
-                }
-                .controlSize(.large)
-                .keyboardShortcut(.return)
-                .disabled(batch.jobs.isEmpty || !viewModel.hasSelections)
+                })
+                .appKitDefault()
+                .appKitEnabled(!batch.jobs.isEmpty && viewModel.hasSelections)
+                .fixedSize()
             }
         }
         .padding()

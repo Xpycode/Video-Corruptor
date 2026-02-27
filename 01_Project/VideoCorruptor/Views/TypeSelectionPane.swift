@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct SidebarView: View {
+struct TypeSelectionPane: View {
     @Environment(CorruptorViewModel.self) private var viewModel
     @State private var expandedSeverity: CorruptionType?
 
@@ -17,12 +17,20 @@ struct SidebarView: View {
                 presetsSection
             } else {
                 Section {
-                    Label("Drop a video to start", systemImage: "arrow.down.doc")
-                        .foregroundStyle(.secondary)
+                    VStack(spacing: 8) {
+                        Image(systemName: "arrow.down.doc")
+                            .font(.title2)
+                            .foregroundStyle(.tertiary)
+                        Text("Drop a video to start")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 20)
                 }
             }
         }
-        .listStyle(.sidebar)
+        .listStyle(.inset)
     }
 
     // MARK: - Conflicts
@@ -78,12 +86,11 @@ struct SidebarView: View {
                     ("H", CorruptionSeverity.heavy),
                     ("X", CorruptionSeverity.extreme),
                 ], id: \.0) { label, severity in
-                    Button(label) {
+                    AppKitButton(title: label, action: {
                         viewModel.applyGlobalSeverity(severity)
-                    }
-                    .buttonStyle(.bordered)
-                    .controlSize(.small)
-                    .help("\(label == "S" ? "Subtle" : label == "M" ? "Moderate" : label == "H" ? "Heavy" : "Extreme") severity for all selected types")
+                    })
+                    .appKitControlSize(.small)
+                    .fixedSize()
                 }
             }
         }
