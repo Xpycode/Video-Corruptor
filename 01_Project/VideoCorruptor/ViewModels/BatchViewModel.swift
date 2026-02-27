@@ -118,13 +118,25 @@ final class BatchViewModel {
                             let subfolder = dir.appendingPathComponent(sourceName)
                             try? FileManager.default.createDirectory(at: subfolder, withIntermediateDirectories: true)
 
+                            // Filter types for this job's format
+                            let jobTypes: [CorruptionType]
+                            if let format = job.sourceFile.detectedFormat {
+                                jobTypes = sortedTypes.filter { $0.supportedFormats.contains(format) }
+                            } else {
+                                jobTypes = sortedTypes
+                            }
+
+                            guard !jobTypes.isEmpty else {
+                                return (jobIndex, [CorruptionResult](), BatchJob.BatchJobStatus.completed)
+                            }
+
                             do {
                                 let results: [CorruptionResult]
                                 switch mode {
                                 case .individual:
                                     results = await engine.corrupt(
                                         source: job.sourceFile,
-                                        types: sortedTypes,
+                                        types: jobTypes,
                                         outputDirectory: subfolder,
                                         masterSeed: masterSeed,
                                         severities: severities,
@@ -133,7 +145,7 @@ final class BatchViewModel {
                                 case .stacked:
                                     let result = await engine.corruptStacked(
                                         source: job.sourceFile,
-                                        types: sortedTypes,
+                                        types: jobTypes,
                                         outputDirectory: subfolder,
                                         masterSeed: masterSeed,
                                         severities: severities
@@ -176,7 +188,7 @@ final class BatchViewModel {
             // Write manifest
             writeBatchManifest(to: dir, masterSeed: masterSeed)
 
-            overallProgress = 1.0
+            overallProgress = Double(completedCount) / Double(max(1, totalCount))
             isProcessing = false
         }
     }

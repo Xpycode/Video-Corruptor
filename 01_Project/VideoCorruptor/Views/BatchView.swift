@@ -143,6 +143,7 @@ struct BatchView: View {
                 .controlSize(.large)
             } else {
                 Button("Start Batch") {
+                    viewModel.applySeedFromText()
                     batch.startBatch(
                         types: viewModel.selectedTypes,
                         masterSeed: viewModel.currentSeed,

@@ -6,7 +6,7 @@ extension Data {
     func readUInt16BE(at offset: Int) -> UInt16? {
         guard offset >= 0, offset + 2 <= count else { return nil }
         return withUnsafeBytes { buffer in
-            buffer.load(fromByteOffset: offset, as: UInt16.self).bigEndian
+            buffer.loadUnaligned(fromByteOffset: offset, as: UInt16.self).bigEndian
         }
     }
 
@@ -14,7 +14,7 @@ extension Data {
     func readUInt32BE(at offset: Int) -> UInt32? {
         guard offset >= 0, offset + 4 <= count else { return nil }
         return withUnsafeBytes { buffer in
-            buffer.load(fromByteOffset: offset, as: UInt32.self).bigEndian
+            buffer.loadUnaligned(fromByteOffset: offset, as: UInt32.self).bigEndian
         }
     }
 
@@ -22,7 +22,7 @@ extension Data {
     func readUInt64BE(at offset: Int) -> UInt64? {
         guard offset >= 0, offset + 8 <= count else { return nil }
         return withUnsafeBytes { buffer in
-            buffer.load(fromByteOffset: offset, as: UInt64.self).bigEndian
+            buffer.loadUnaligned(fromByteOffset: offset, as: UInt64.self).bigEndian
         }
     }
 
