@@ -7,6 +7,7 @@ enum MXFGenericTruncationKind: String, CaseIterable, Hashable, Sendable {
     case immediatelyPostLongBER
     case oneByteBeforeValueEnd
     case betweenCompleteKLVTriplets
+    case insidePartitionFixedField
 }
 
 enum MXFTruncationMutationError: Error, Equatable, Sendable {
@@ -23,6 +24,12 @@ struct MXFGenericTruncationMutation: MXFFixtureMutation, Sendable {
             result = MXFExpectedResult(
                 outcome: .acceptedWithWarning,
                 category: "cleanEndBeforeRemainingKLVs",
+                consumerCode: nil
+            )
+        case .insidePartitionFixedField:
+            result = MXFExpectedResult(
+                outcome: .rejected,
+                category: "unexpectedEOF",
                 consumerCode: nil
             )
         default:
@@ -147,6 +154,22 @@ struct MXFGenericTruncationMutation: MXFFixtureMutation, Sendable {
                 }
             }
             return nil
+
+        case .insidePartitionFixedField:
+            let inspector = MXFPartitionInspector()
+            for element in source.elements {
+                guard inspector.classify(key: element.key) != nil,
+                      let valueSpan = element.valueSpan,
+                      valueSpan.length >= MXFPartitionInspector.fixedValueByteCount,
+                      let fieldEnd = checkedAdd(valueSpan.lowerBound, 16),
+                      fieldEnd <= source.inputByteCount else { continue }
+                return elementTarget(
+                    element,
+                    retained: fieldEnd - 1,
+                    classification: "partition fixed field: thisPartition"
+                )
+            }
+            return nil
         }
     }
 
@@ -199,6 +222,7 @@ struct MXFGenericTruncationMutation: MXFFixtureMutation, Sendable {
         case .immediatelyPostLongBER: "Truncate immediately after a long-form BER field"
         case .oneByteBeforeValueEnd: "Truncate one byte before a KLV value ends"
         case .betweenCompleteKLVTriplets: "Truncate between complete KLV triplets"
+        case .insidePartitionFixedField: "Truncate inside a partition pack fixed field"
         }
     }
 
@@ -214,6 +238,7 @@ struct MXFGenericTruncationMutation: MXFFixtureMutation, Sendable {
         case .insideLongBER, .immediatelyPostLongBER: "At least one complete KLV with long-form BER"
         case .oneByteBeforeValueEnd: "At least one complete KLV with a nonempty value"
         case .betweenCompleteKLVTriplets: "At least two physically adjacent complete KLV triplets"
+        case .insidePartitionFixedField: "At least one complete partition pack fixed field"
         }
     }
 
@@ -222,6 +247,7 @@ struct MXFGenericTruncationMutation: MXFFixtureMutation, Sendable {
         case .insideLongBER, .immediatelyPostLongBER: "Lowest-offset complete KLV using long-form BER"
         case .oneByteBeforeValueEnd: "Lowest-offset complete KLV with a nonempty value"
         case .betweenCompleteKLVTriplets: "Lowest-offset adjacent pair of complete KLV triplets"
+        case .insidePartitionFixedField: "Lowest-offset complete partition pack; ThisPartition field"
         default: "Lowest-offset complete KLV triplet"
         }
     }
@@ -234,6 +260,7 @@ struct MXFGenericTruncationMutation: MXFFixtureMutation, Sendable {
         case .immediatelyPostLongBER: "immediately after complete long-form BER field"
         case .oneByteBeforeValueEnd: "one byte before declared KLV value end"
         case .betweenCompleteKLVTriplets: "between physically adjacent complete KLV triplets"
+        case .insidePartitionFixedField: "inside partition pack ThisPartition fixed field, one byte before its end"
         }
     }
 

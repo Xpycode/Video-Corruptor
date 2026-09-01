@@ -10,18 +10,19 @@ final class TruncationMutationTests: XCTestCase {
             "mxf.truncation.insideLongBER.v1",
             "mxf.truncation.immediatelyPostLongBER.v1",
             "mxf.truncation.oneByteBeforeValueEnd.v1",
-            "mxf.truncation.betweenCompleteKLVTriplets.v1"
+            "mxf.truncation.betweenCompleteKLVTriplets.v1",
+            "mxf.truncation.insidePartitionFixedField.v1"
         ])
         XCTAssertTrue(MXFTruncationMutations.all.allSatisfy {
             $0.definition.lifecycle == .draft
                 && $0.definition.defaultExpectedResult.consumerCode == nil
         })
 
-        for mutation in MXFTruncationMutations.all.dropLast() {
+        for mutation in MXFTruncationMutations.all where mutation.kind != .betweenCompleteKLVTriplets {
             XCTAssertEqual(mutation.definition.defaultExpectedResult.outcome, .rejected)
             XCTAssertEqual(mutation.definition.defaultExpectedResult.category, "unexpectedEOF")
         }
-        let cleanEnd = try XCTUnwrap(MXFTruncationMutations.all.last)
+        let cleanEnd = MXFGenericTruncationMutation(kind: .betweenCompleteKLVTriplets)
         XCTAssertEqual(cleanEnd.definition.defaultExpectedResult.outcome, .acceptedWithWarning)
         XCTAssertEqual(cleanEnd.definition.defaultExpectedResult.category, "cleanEndBeforeRemainingKLVs")
     }
@@ -41,7 +42,7 @@ final class TruncationMutationTests: XCTestCase {
             .betweenCompleteKLVTriplets: inspected.elements[0].physicalSpan.upperBound
         ]
 
-        for mutation in MXFTruncationMutations.all {
+        for mutation in MXFTruncationMutations.all where mutation.kind != .insidePartitionFixedField {
             let targetSize = try XCTUnwrap(expected[mutation.kind])
             XCTAssertEqual(
                 mutation.evaluate(source: inspected),
@@ -73,6 +74,34 @@ final class TruncationMutationTests: XCTestCase {
             )
             XCTAssertEqual(try fileSize(outputURL), targetSize)
         }
+    }
+
+    func testPartitionFixedFieldTruncationEndsInsideThisPartition() throws {
+        let key = Data([0x06, 0x0e, 0x2b, 0x34, 0x02, 0x05, 0x01, 0x01,
+                        0x0d, 0x01, 0x02, 0x01, 0x01, 0x02, 0x04, 0x00])
+        let sourceData = key + Data([88]) + Data(repeating: 0, count: 88) + Data([0xee])
+        let inspected = MXFStructuralInspector().inspect(data: sourceData)
+        let mutation = MXFGenericTruncationMutation(kind: .insidePartitionFixedField)
+        XCTAssertEqual(mutation.evaluate(source: inspected), .applicable(
+            targetOffset: 0, targetClassification: "partition fixed field: thisPartition"
+        ))
+        let sourceURL = try temporaryFile(contents: sourceData)
+        let outputURL = try temporaryFile(contents: sourceData)
+        defer { try? FileManager.default.removeItem(at: sourceURL); try? FileManager.default.removeItem(at: outputURL) }
+        var rng = SeededRNG(seed: 1)
+        let record = try mutation.apply(to: outputURL, source: inspected, rng: &rng)
+        XCTAssertEqual(record.truncation?.retainedSize.value, 16 + 1 + 16 - 1)
+        try MXFCorpusVerifier().verify(sourceURL: sourceURL, outputURL: outputURL,
+                                       edits: [], truncation: record.truncation)
+        let truncated = try Data(contentsOf: outputURL)
+        let result = MXFPartitionInspector().inspect(
+            key: key, keySpan: try ByteSpan(offset: 0, length: 16),
+            valueSpan: try ByteSpan(offset: 17, length: 88), in: truncated
+        )
+        guard case .invalid(.truncatedFixedField(let field, _, _)) = result else {
+            return XCTFail("Expected typed partition truncation, got \(result)")
+        }
+        XCTAssertEqual(field, .thisPartition)
     }
 
     func testExactVerifierRejectsAChangedByteInTruncatedPrefix() throws {
@@ -140,6 +169,7 @@ final class TruncationMutationTests: XCTestCase {
         case .immediatelyPostLongBER: "post-long-form BER"
         case .oneByteBeforeValueEnd: "KLV value"
         case .betweenCompleteKLVTriplets: "complete KLV triplet boundary"
+        case .insidePartitionFixedField: "partition fixed field: thisPartition"
         }
     }
 
