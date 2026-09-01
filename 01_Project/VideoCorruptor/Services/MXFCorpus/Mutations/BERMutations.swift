@@ -1,7 +1,53 @@
 import Foundation
 
+enum MXFRequiredElementDeclarationError: Error, Equatable, Sendable {
+    case invalidKeyWidth(Int)
+    case emptyProfileID
+    case emptyClassification
+}
+
+/// A controlled source/profile assertion. No MXF key is treated as required unless the caller
+/// supplies one of these declarations, and the zero-length boundary policy is verified afterward.
+struct MXFRequiredElementDeclaration: Equatable, Sendable {
+    enum ZeroLengthBoundaryPolicy: Equatable, Sendable {
+        case payloadStartsCompleteKLVSequence
+    }
+
+    let profileID: String
+    let key: Data
+    let classification: String
+    let zeroLengthBoundaryPolicy: ZeroLengthBoundaryPolicy
+
+    init(
+        profileID: String,
+        key: Data,
+        classification: String,
+        zeroLengthBoundaryPolicy: ZeroLengthBoundaryPolicy
+    ) throws {
+        guard key.count == 16 else {
+            throw MXFRequiredElementDeclarationError.invalidKeyWidth(key.count)
+        }
+        guard !profileID.isEmpty else { throw MXFRequiredElementDeclarationError.emptyProfileID }
+        guard !classification.isEmpty else {
+            throw MXFRequiredElementDeclarationError.emptyClassification
+        }
+        self.profileID = profileID
+        self.key = key
+        self.classification = classification
+        self.zeroLengthBoundaryPolicy = zeroLengthBoundaryPolicy
+    }
+}
+
 enum BERMutations {
-    static let fixtures: [any MXFFixtureMutation] = BERMutationKind.allCases.map(BERMutation.init)
+    static let fixtures: [any MXFFixtureMutation] = fixtures(requiredElements: [])
+
+    static func fixtures(
+        requiredElements: [MXFRequiredElementDeclaration]
+    ) -> [any MXFFixtureMutation] {
+        BERMutationKind.allCases.map {
+            BERMutation(kind: $0, requiredElements: requiredElements)
+        }
+    }
 }
 
 private enum BERMutationKind: String, CaseIterable, Sendable {
@@ -11,6 +57,7 @@ private enum BERMutationKind: String, CaseIterable, Sendable {
     case valueBeyondEOF = "ber.valueBeyondEOF.v1"
     case lengthAdditionOverflow = "ber.lengthAdditionOverflow.v1"
     case nonMinimalLongForm = "ber.nonMinimalLongForm.v1"
+    case zeroRequiredValue = "ber.zeroRequiredValue.v1"
     case shorterThanPayload = "ber.shorterThanPayload.v1"
 }
 
@@ -22,6 +69,7 @@ private enum BERMutationError: Error, Equatable, Sendable {
 
 private struct BERMutation: MXFFixtureMutation {
     let kind: BERMutationKind
+    let requiredElements: [MXFRequiredElementDeclaration]
 
     var definition: MXFFixtureDefinition {
         MXFFixtureDefinition(
@@ -47,7 +95,7 @@ private struct BERMutation: MXFFixtureMutation {
         }
         return .applicable(
             targetOffset: target.ber.physicalSpan.lowerBound,
-            targetClassification: "klv.ber.valueLength"
+            targetClassification: targetClassification(for: target)
         )
     }
 
@@ -96,6 +144,9 @@ private struct BERMutation: MXFFixtureMutation {
             let replacement = Data([0x81, UInt8(replacementValue)])
             edits = [try edit(workingFile, at: berOffset, replacement: replacement, recorder: recorder)]
             semanticValues = [try semantic(from: target.ber.value, to: replacementValue)]
+        case .zeroRequiredValue:
+            edits = [try edit(workingFile, at: berOffset, replacement: Data([0x00]), recorder: recorder)]
+            semanticValues = [try semantic(from: target.ber.value, to: 0)]
         case .shorterThanPayload:
             let replacementValue = target.ber.value - 1
             let replacement = try encode(value: replacementValue, preserving: target.ber)
@@ -106,7 +157,7 @@ private struct BERMutation: MXFFixtureMutation {
         try MXFEditApplicator().apply(edits: edits, truncation: truncation, to: workingFile)
         return MXFMutationRecord(
             targetOffset: MXFDecimalUInt64(berOffset),
-            targetClassification: "klv.ber.valueLength",
+            targetClassification: targetClassification(for: target),
             edits: edits,
             truncation: truncation,
             semanticValues: semanticValues
@@ -140,6 +191,16 @@ private struct BERMutation: MXFFixtureMutation {
                 if case .limitExceeded = $0 { return true }
                 return false
             }
+            if kind == .zeroRequiredValue {
+                guard result.completedWalk,
+                      result.elements.contains(where: {
+                          $0.ber.physicalSpan.lowerBound == expectedOffset && $0.ber.value == 0
+                      }) else {
+                    throw BERMutationError.postconditionFailed(
+                        "\(kind.rawValue): zero value did not leave a complete KLV walk"
+                    )
+                }
+            }
             guard self.matches(diagnostics: diagnostics, at: expectedOffset) else {
                 throw BERMutationError.postconditionFailed("\(kind.rawValue): \(diagnostics)")
             }
@@ -166,6 +227,11 @@ private struct BERMutation: MXFFixtureMutation {
         case .nonMinimalLongForm:
             return source.elements.first {
                 $0.ber.encodedWidth == 1 && (2...127).contains($0.ber.value)
+            }
+        case .zeroRequiredValue:
+            return source.elements.first { element in
+                element.ber.encodedWidth == 1 && element.ber.value > 0
+                    && requiredDeclaration(for: element) != nil
             }
         case .shorterThanPayload:
             return source.elements.reversed().first {
@@ -197,6 +263,8 @@ private struct BERMutation: MXFFixtureMutation {
                 offset: offset,
                 diagnostic: .nonMinimalLongForm(minimumLengthOctetCount: 1, actualLengthOctetCount: 1)
             )]
+        case .zeroRequiredValue:
+            return diagnostics.isEmpty
         case .shorterThanPayload:
             return diagnostics.count == 1 && diagnostics.contains { if case .truncatedKey = $0 { true } else { false } }
         }
@@ -253,6 +321,26 @@ private struct BERMutation: MXFFixtureMutation {
         return contentBytes == 8 || value < (UInt64(1) << (contentBytes * 8))
     }
 
+    private func targetClassification(for element: MXFInspectedElement) -> String {
+        guard kind == .zeroRequiredValue,
+              let declaration = requiredDeclaration(for: element) else {
+            return "klv.ber.valueLength"
+        }
+        return "profile.requiredElement:\(declaration.profileID):\(declaration.classification)"
+    }
+
+    private func requiredDeclaration(
+        for element: MXFInspectedElement
+    ) -> MXFRequiredElementDeclaration? {
+        let matches = requiredElements.filter {
+            $0.key == element.key
+                && $0.zeroLengthBoundaryPolicy == .payloadStartsCompleteKLVSequence
+        }
+        // Multiple profile claims for one physical key are ambiguous without richer source-profile
+        // metadata, so they are conservatively rejected instead of depending on declaration order.
+        return matches.count == 1 ? matches[0] : nil
+    }
+
     private static let limits = MXFReaderLimits(
         maxInputBytes: MXFDecimalUInt64(16 * 1_024 * 1_024),
         maxKLVElements: MXFDecimalUInt64(100_000),
@@ -270,6 +358,8 @@ private struct BERMutation: MXFFixtureMutation {
         case .headerTruncated: return "complete KLV with long-form BER"
         case .lengthAdditionOverflow: return "complete KLV with nine-byte BER encoding"
         case .nonMinimalLongForm: return "complete KLV with short-form length 2...127"
+        case .zeroRequiredValue:
+            return "controlled profile declaration for a required, nonempty, short-form element whose payload starts a complete KLV sequence"
         case .valueBeyondEOF: return "last complete KLV whose BER width can encode EOF+1"
         case .shorterThanPayload: return "last nonempty complete KLV"
         default: return "at least one complete KLV"
@@ -281,7 +371,8 @@ private struct BERMutation: MXFFixtureMutation {
     private var expectedResult: MXFExpectedResult {
         switch kind {
         case .headerTruncated: return .init(outcome: .rejected, category: "unexpectedEOF", consumerCode: nil)
-        case .valueBeyondEOF, .shorterThanPayload: return .init(outcome: .rejected, category: "invalidLength", consumerCode: nil)
+        case .valueBeyondEOF, .zeroRequiredValue, .shorterThanPayload:
+            return .init(outcome: .rejected, category: "invalidLength", consumerCode: nil)
         case .lengthAdditionOverflow: return .init(outcome: .rejected, category: "integerOverflow", consumerCode: nil)
         case .nonMinimalLongForm: return .init(outcome: .acceptedWithWarning, category: "nonCanonicalBER", consumerCode: nil)
         default: return .init(outcome: .rejected, category: "invalidBER", consumerCode: nil)

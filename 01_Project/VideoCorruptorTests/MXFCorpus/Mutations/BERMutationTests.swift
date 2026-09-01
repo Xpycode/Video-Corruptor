@@ -88,13 +88,72 @@ final class BERMutationTests: XCTestCase {
         )
     }
 
-    private func generate(id: String, sourceData: Data) async throws -> GeneratedFixture {
+    func testRequiredZeroIsApplicableOnlyWithControlledProfileDeclaration() async throws {
+        let requiredKey = Data(repeating: 0x31, count: 16)
+        let nestedKLV = klv(keyByte: 0x42, length: Data([0x01]), payload: Data([0xcc]))
+        let source = requiredKey + Data([UInt8(nestedKLV.count)]) + nestedKLV
+        let declaration = try MXFRequiredElementDeclaration(
+            profileID: "synthetic.required-elements.v1",
+            key: requiredKey,
+            classification: "requiredHeaderMetadata",
+            zeroLengthBoundaryPolicy: .payloadStartsCompleteKLVSequence
+        )
+
+        let generated = try await generate(
+            id: "ber.zeroRequiredValue.v1",
+            sourceData: source,
+            fixtures: BERMutations.fixtures(requiredElements: [declaration])
+        )
+
+        XCTAssertEqual(generated.entry.expected.outcome, .rejected)
+        XCTAssertEqual(generated.entry.expected.category, "invalidLength")
+        XCTAssertEqual(
+            generated.entry.mutation.targetClassification,
+            "profile.requiredElement:synthetic.required-elements.v1:requiredHeaderMetadata"
+        )
+        XCTAssertEqual(generated.entry.mutation.edits.first?.originalHex.value, "12")
+        XCTAssertEqual(generated.entry.mutation.edits.first?.replacementHex.value, "00")
+        XCTAssertEqual(generated.entry.mutation.semanticValues, [
+            try MXFSemanticValue(
+                field: "klv.valueLength",
+                kind: .unsigned,
+                original: "18",
+                replacement: "0"
+            )
+        ])
+        let inspected = try MXFStructuralInspector().inspect(fileAt: generated.outputURL)
+        XCTAssertTrue(inspected.completedWalk)
+        XCTAssertEqual(inspected.elements.map(\.ber.value), [0, 1])
+        XCTAssertEqual(inspected.diagnostics, [])
+    }
+
+    func testRequiredZeroRejectsGenericUnknownKLVWithoutDeclaration() throws {
+        let source = MXFStructuralInspector().inspect(
+            data: klv(keyByte: 0x31, length: Data([0x01]), payload: Data([0xaa]))
+        )
+        let fixture = try XCTUnwrap(
+            try MXFFixtureRegistry(fixtures: BERMutations.fixtures)
+                .selected(ids: ["ber.zeroRequiredValue.v1"])
+                .first
+        )
+
+        guard case .notApplicable(let reason) = fixture.evaluate(source: source) else {
+            return XCTFail("Generic unknown KLV must never be labeled required")
+        }
+        XCTAssertTrue(reason.contains("controlled profile declaration"))
+    }
+
+    private func generate(
+        id: String,
+        sourceData: Data,
+        fixtures: [any MXFFixtureMutation] = BERMutations.fixtures
+    ) async throws -> GeneratedFixture {
         let root = try temporaryDirectory()
         let source = root.appendingPathComponent("source.mxf")
         try sourceData.write(to: source)
         let output = root.appendingPathComponent("corpus")
         let generator = MXFCorpusGenerator(
-            registry: try MXFFixtureRegistry(fixtures: BERMutations.fixtures)
+            registry: try MXFFixtureRegistry(fixtures: fixtures)
         )
         let report = try await generator.generate(MXFCorpusRequest(
             sources: [source],
