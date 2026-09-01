@@ -56,7 +56,9 @@
 		8A41437B59630736FCAC0E14 /* MXFStructuralInspectorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E033F9CBFC3C9B19402F1385 /* MXFStructuralInspectorTests.swift */; };
 		8E5320B8E4F160FE23E60887 /* BatchViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20878EB1ED100A61F417977B /* BatchViewModel.swift */; };
 		943DD23514988E1982155D7E /* CheckedBinaryArithmeticTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27CA07D93FB4D09CFA0EFDA0 /* CheckedBinaryArithmeticTests.swift */; };
+		955D40682E6AE94AA659B24E /* MXFPartitionGraphTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17F99B7512C52F69FFBBADB6 /* MXFPartitionGraphTests.swift */; };
 		99BDC1E68A77F0C4FE0EAE0E /* MXFCorruptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 884E3B2AA70382D3D8DF7809 /* MXFCorruptor.swift */; };
+		9B63737255980ADFDE828D94 /* MXFPartitionGraph.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE664CF852BA3C027CF25715 /* MXFPartitionGraph.swift */; };
 		9E6D3FC4598115B0819E15D2 /* ManifestGoldenTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 092C66E971742F3AE0909D49 /* ManifestGoldenTests.swift */; };
 		A58335E0F1720B761E9EBEE1 /* BatchManifest.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABE13CF6633663ABB5C908B5 /* BatchManifest.swift */; };
 		A7A86517D95F2376523F57E0 /* MXFManifestValidator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B6602EC1EB0ECC296B2ED9F /* MXFManifestValidator.swift */; };
@@ -109,6 +111,7 @@
 		08036198859D7BC4CCFF4E36 /* MXFElement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXFElement.swift; sourceTree = "<group>"; };
 		092C66E971742F3AE0909D49 /* ManifestGoldenTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManifestGoldenTests.swift; sourceTree = "<group>"; };
 		1361B5EFBA91BB5022F611ED /* DropZoneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DropZoneView.swift; sourceTree = "<group>"; };
+		17F99B7512C52F69FFBBADB6 /* MXFPartitionGraphTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXFPartitionGraphTests.swift; sourceTree = "<group>"; };
 		1A9D9B56A3B740973DD74F62 /* CorruptionType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CorruptionType.swift; sourceTree = "<group>"; };
 		1CE2046EE687FD03061E8119 /* CorruptionResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CorruptionResult.swift; sourceTree = "<group>"; };
 		20878EB1ED100A61F417977B /* BatchViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatchViewModel.swift; sourceTree = "<group>"; };
@@ -168,6 +171,7 @@
 		CB51071E5324C00101CA7611 /* MXFStructuralInspector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXFStructuralInspector.swift; sourceTree = "<group>"; };
 		CCC6D36CEEE603CA04C2E743 /* MP4FrameMapBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MP4FrameMapBuilder.swift; sourceTree = "<group>"; };
 		CCDD10E196D9135F182596FF /* Data+BigEndian.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Data+BigEndian.swift"; sourceTree = "<group>"; };
+		CE664CF852BA3C027CF25715 /* MXFPartitionGraph.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXFPartitionGraph.swift; sourceTree = "<group>"; };
 		D00EAA991147AFB9F194B89E /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		D69453D9573E28F483A10752 /* SeedDerivationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SeedDerivationTests.swift; sourceTree = "<group>"; };
 		D8FD8C8476DFFEA8D8A51C74 /* VideoFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoFormat.swift; sourceTree = "<group>"; };
@@ -285,6 +289,7 @@
 			isa = PBXGroup;
 			children = (
 				F0799F385BC3A1C1FF93FA4C /* MXFBERTests.swift */,
+				17F99B7512C52F69FFBBADB6 /* MXFPartitionGraphTests.swift */,
 				593A3F5F63E70EBEE7E36D15 /* MXFPartitionInspectorTests.swift */,
 				E033F9CBFC3C9B19402F1385 /* MXFStructuralInspectorTests.swift */,
 			);
@@ -350,6 +355,7 @@
 				3EF874A67605DCDA53122862 /* MXFBER.swift */,
 				B6D06E134F18C534FD1191B7 /* MXFInspectedFile.swift */,
 				E1F4319DE9AB835A096EB33C /* MXFInspectionLimits.swift */,
+				CE664CF852BA3C027CF25715 /* MXFPartitionGraph.swift */,
 				6EFA235DA077E6C2EF7AB8CB /* MXFPartitionInspector.swift */,
 				2ACE96013B8CFE538A5B0F7F /* MXFStructuralDiagnostic.swift */,
 				CB51071E5324C00101CA7611 /* MXFStructuralInspector.swift */,
@@ -691,6 +697,7 @@
 				56E0FD2E489F621A215736F6 /* MXFMutationRecord.swift in Sources */,
 				E1E6122CF09563C89876D15A /* MXFMutationRecorder.swift in Sources */,
 				3CE56C04F297776F17F057CA /* MXFParser.swift in Sources */,
+				9B63737255980ADFDE828D94 /* MXFPartitionGraph.swift in Sources */,
 				AFD5B5B16D6608194E59C804 /* MXFPartitionInspector.swift in Sources */,
 				C394E75F9DA51B976016E362 /* MXFStructuralDiagnostic.swift in Sources */,
 				EF8F5624C44F5F0FBD246940 /* MXFStructuralInspector.swift in Sources */,
@@ -719,6 +726,7 @@
 				4B388CD8AB73AF39478000B3 /* CheckedDataAccessTests.swift in Sources */,
 				5140DACD6D9747C980F7B971 /* GeneratorPipelineTests.swift in Sources */,
 				23563F9D62B455E518C617BE /* MXFBERTests.swift in Sources */,
+				955D40682E6AE94AA659B24E /* MXFPartitionGraphTests.swift in Sources */,
 				2F88715F60C0B5F6C1BE77F1 /* MXFPartitionInspectorTests.swift in Sources */,
 				8A41437B59630736FCAC0E14 /* MXFStructuralInspectorTests.swift in Sources */,
 				9E6D3FC4598115B0819E15D2 /* ManifestGoldenTests.swift in Sources */,
