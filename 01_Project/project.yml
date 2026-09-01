@@ -34,3 +34,29 @@ targets:
         CODE_SIGN_STYLE: Automatic
         ENABLE_APP_SANDBOX: false
         ENABLE_HARDENED_RUNTIME: true
+
+  VideoCorruptorTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - VideoCorruptorTests
+    dependencies:
+      - target: VideoCorruptor
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.videotools.VideoCorruptorTests
+        GENERATE_INFOPLIST_FILE: true
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/VideoCorruptor.app/Contents/MacOS/VideoCorruptor"
+        BUNDLE_LOADER: "$(TEST_HOST)"
+        CODE_SIGN_STYLE: Automatic
+
+schemes:
+  VideoCorruptor:
+    build:
+      targets:
+        VideoCorruptor: all
+        VideoCorruptorTests: [test]
+    test:
+      config: Debug
+      targets:
+        - VideoCorruptorTests
