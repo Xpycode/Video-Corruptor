@@ -25,6 +25,7 @@
 		25D14AD27FB4D42D98EDCEFA /* SHA256HasherTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DC74F9C5A06E82C18F3BF55 /* SHA256HasherTests.swift */; };
 		2A5BD11F83B15D4C273FBB00 /* SeededRNG.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3026E1A39B73D45BE3AD695 /* SeededRNG.swift */; };
 		2DD406AEBCA3C507847409AE /* BERMutationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DA09577697DF8F4BBAF5305 /* BERMutationTests.swift */; };
+		2F88715F60C0B5F6C1BE77F1 /* MXFPartitionInspectorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 593A3F5F63E70EBEE7E36D15 /* MXFPartitionInspectorTests.swift */; };
 		359DBC8E6F525FAB6D853EEB /* CorruptionType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A9D9B56A3B740973DD74F62 /* CorruptionType.swift */; };
 		36622A064ACF1D7BCF032409 /* DetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41FE56709E7DEC3F5C687D16 /* DetailView.swift */; };
 		37BE66778FFACD8B6F4D3999 /* MutationTransactionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 547482DB8C6B330AA9A3751A /* MutationTransactionTests.swift */; };
@@ -60,6 +61,7 @@
 		A58335E0F1720B761E9EBEE1 /* BatchManifest.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABE13CF6633663ABB5C908B5 /* BatchManifest.swift */; };
 		A7A86517D95F2376523F57E0 /* MXFManifestValidator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B6602EC1EB0ECC296B2ED9F /* MXFManifestValidator.swift */; };
 		AD7111BB74A5FDEB90DB572D /* SHA256Hasher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E3D493B2BA20A8299586550 /* SHA256Hasher.swift */; };
+		AFD5B5B16D6608194E59C804 /* MXFPartitionInspector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EFA235DA077E6C2EF7AB8CB /* MXFPartitionInspector.swift */; };
 		B102420A95AE06FB13CDB85A /* MP4Parser.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCB716F5A4B85B0D5703388F /* MP4Parser.swift */; };
 		C394E75F9DA51B976016E362 /* MXFStructuralDiagnostic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2ACE96013B8CFE538A5B0F7F /* MXFStructuralDiagnostic.swift */; };
 		C4643418EA0C57DE73268855 /* MXFFixtureManifest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7DFD34ABA3FAA2D9017C54AD /* MXFFixtureManifest.swift */; };
@@ -131,10 +133,12 @@
 		4FC1E16B24E29F72F1E924D4 /* View+SplitViewAutosave.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "View+SplitViewAutosave.swift"; sourceTree = "<group>"; };
 		5361DF81327985379A662A03 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		547482DB8C6B330AA9A3751A /* MutationTransactionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MutationTransactionTests.swift; sourceTree = "<group>"; };
+		593A3F5F63E70EBEE7E36D15 /* MXFPartitionInspectorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXFPartitionInspectorTests.swift; sourceTree = "<group>"; };
 		5D747CC549858AB44527F7E2 /* BERMutations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BERMutations.swift; sourceTree = "<group>"; };
 		5DA09577697DF8F4BBAF5305 /* BERMutationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BERMutationTests.swift; sourceTree = "<group>"; };
 		640BA4C9FBCD1C6B53FE8F6C /* CorruptionContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CorruptionContext.swift; sourceTree = "<group>"; };
 		68185FEAA964C9F22B99DEB7 /* MXFMutationRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXFMutationRecorder.swift; sourceTree = "<group>"; };
+		6EFA235DA077E6C2EF7AB8CB /* MXFPartitionInspector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXFPartitionInspector.swift; sourceTree = "<group>"; };
 		6F30D2F311C5EDA091FF1D63 /* SeedFormatting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SeedFormatting.swift; sourceTree = "<group>"; };
 		741FBB420C51877EFD744DB9 /* VideoFile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoFile.swift; sourceTree = "<group>"; };
 		769D193F6A74AEFF41C67321 /* CheckedDataAccess.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckedDataAccess.swift; sourceTree = "<group>"; };
@@ -281,6 +285,7 @@
 			isa = PBXGroup;
 			children = (
 				F0799F385BC3A1C1FF93FA4C /* MXFBERTests.swift */,
+				593A3F5F63E70EBEE7E36D15 /* MXFPartitionInspectorTests.swift */,
 				E033F9CBFC3C9B19402F1385 /* MXFStructuralInspectorTests.swift */,
 			);
 			path = Inspection;
@@ -345,6 +350,7 @@
 				3EF874A67605DCDA53122862 /* MXFBER.swift */,
 				B6D06E134F18C534FD1191B7 /* MXFInspectedFile.swift */,
 				E1F4319DE9AB835A096EB33C /* MXFInspectionLimits.swift */,
+				6EFA235DA077E6C2EF7AB8CB /* MXFPartitionInspector.swift */,
 				2ACE96013B8CFE538A5B0F7F /* MXFStructuralDiagnostic.swift */,
 				CB51071E5324C00101CA7611 /* MXFStructuralInspector.swift */,
 			);
@@ -685,6 +691,7 @@
 				56E0FD2E489F621A215736F6 /* MXFMutationRecord.swift in Sources */,
 				E1E6122CF09563C89876D15A /* MXFMutationRecorder.swift in Sources */,
 				3CE56C04F297776F17F057CA /* MXFParser.swift in Sources */,
+				AFD5B5B16D6608194E59C804 /* MXFPartitionInspector.swift in Sources */,
 				C394E75F9DA51B976016E362 /* MXFStructuralDiagnostic.swift in Sources */,
 				EF8F5624C44F5F0FBD246940 /* MXFStructuralInspector.swift in Sources */,
 				AD7111BB74A5FDEB90DB572D /* SHA256Hasher.swift in Sources */,
@@ -712,6 +719,7 @@
 				4B388CD8AB73AF39478000B3 /* CheckedDataAccessTests.swift in Sources */,
 				5140DACD6D9747C980F7B971 /* GeneratorPipelineTests.swift in Sources */,
 				23563F9D62B455E518C617BE /* MXFBERTests.swift in Sources */,
+				2F88715F60C0B5F6C1BE77F1 /* MXFPartitionInspectorTests.swift in Sources */,
 				8A41437B59630736FCAC0E14 /* MXFStructuralInspectorTests.swift in Sources */,
 				9E6D3FC4598115B0819E15D2 /* ManifestGoldenTests.swift in Sources */,
 				D130489E98036D03F21B78AA /* ManifestModelTests.swift in Sources */,
