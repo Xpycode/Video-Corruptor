@@ -10,6 +10,7 @@ VideoCorruptor - macOS tool for generating corrupted video test files
 
 | Date | Focus | Outcome | Log |
 |------|-------|---------|-----|
+| 2026-09-01 | Recover VideoCorruptor and define PlayPlayPlay's adversarial MXF corpus | Recovered the app, completed the MXF audit, approved the corpus spec and policies, and created a 33-task implementation plan. Next: execute Wave 0's test and schema foundations. | [log](2026-09-01.md) |
 | 2026-02-27e | UI polish: AppKit controls | AppKitButton + AppKitToolbarButtonStyle, mode picker moved, processing overlay | [log](2026-02-27e.md) |
 | 2026-02-27d | Reliability hardening | 9/9 fixes applied (2 critical, 4 high, 3 medium), clean build, pushed | [log](2026-02-27.md) |
 | 2026-02-27c | Code review & fix plan | Verified 9 issues, rejected 3 false claims, saved fix plan | [log](2026-02-27.md) |
