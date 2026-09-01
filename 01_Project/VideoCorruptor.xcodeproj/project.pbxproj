@@ -12,6 +12,7 @@
 		10A5C0DA92D5CC7552FB7D63 /* CheckedDataAccess.swift in Sources */ = {isa = PBXBuildFile; fileRef = 769D193F6A74AEFF41C67321 /* CheckedDataAccess.swift */; };
 		1268EA2F910046766C1943DE /* MP4Atom.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD5653146F430E1E3B03B75D /* MP4Atom.swift */; };
 		14FE7150A5A8A9CB7B610D10 /* VideoCorruptorApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24EC84C2B2DF75866BB7E65A /* VideoCorruptorApp.swift */; };
+		15AF87B32643F46E1A6D123A /* MXFFixtureDefinition.swift in Sources */ = {isa = PBXBuildFile; fileRef = E94918B140C9BC0EC60A8F1C /* MXFFixtureDefinition.swift */; };
 		1A1B875804E724218FA5277E /* CheckedBinaryArithmetic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 446811CB661759AD3D06E1C1 /* CheckedBinaryArithmetic.swift */; };
 		21BE776799BB7E4948ECA310 /* CorruptorViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC23F2AC0EEFDA091FBAED40 /* CorruptorViewModel.swift */; };
 		23142A289FB491CB48A17860 /* CorruptionConflict.swift in Sources */ = {isa = PBXBuildFile; fileRef = 775B39D32CBDA2691A67DF5B /* CorruptionConflict.swift */; };
@@ -24,6 +25,7 @@
 		43F9D5F71F5C80593F1A8D3E /* FileCorruptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9F4B55FD9F7C58C6388E609 /* FileCorruptor.swift */; };
 		4B388CD8AB73AF39478000B3 /* CheckedDataAccessTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A17609D1D7700F68DF88511 /* CheckedDataAccessTests.swift */; };
 		502C0844D5B5AD2807F17EDA /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00EAA991147AFB9F194B89E /* ContentView.swift */; };
+		56E0FD2E489F621A215736F6 /* MXFMutationRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = B13C82E95B8BC1E0A453CDE0 /* MXFMutationRecord.swift */; };
 		5F84ACEC831C66C2FEC34B9D /* AppKitButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90A1DD877CF98A1B31E2311A /* AppKitButton.swift */; };
 		5FDED9BECB6C3D8EDDAB27B1 /* VideoFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 741FBB420C51877EFD744DB9 /* VideoFile.swift */; };
 		628020550863D152B63A47B4 /* SeedDerivation.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB845D28EBF6EBB3230696BB /* SeedDerivation.swift */; };
@@ -38,16 +40,20 @@
 		99BDC1E68A77F0C4FE0EAE0E /* MXFCorruptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 884E3B2AA70382D3D8DF7809 /* MXFCorruptor.swift */; };
 		A58335E0F1720B761E9EBEE1 /* BatchManifest.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABE13CF6633663ABB5C908B5 /* BatchManifest.swift */; };
 		B102420A95AE06FB13CDB85A /* MP4Parser.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCB716F5A4B85B0D5703388F /* MP4Parser.swift */; };
+		C4643418EA0C57DE73268855 /* MXFFixtureManifest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7DFD34ABA3FAA2D9017C54AD /* MXFFixtureManifest.swift */; };
 		C97A6CFC03620A50A3836832 /* SeedFormatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F30D2F311C5EDA091FF1D63 /* SeedFormatting.swift */; };
 		CC37DE9DC6B1539D2C315523 /* SmokeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9B0C6B1A1810CDDFD3A5F89 /* SmokeTests.swift */; };
 		CDC01EC35B2A2F3479A292B7 /* CorruptionEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = DED7AAC1DBFD5AA9C58D788C /* CorruptionEngine.swift */; };
 		CF784BB3A713B01C6F7D2066 /* DropZoneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1361B5EFBA91BB5022F611ED /* DropZoneView.swift */; };
+		D130489E98036D03F21B78AA /* ManifestModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C887397EEE27806835832D16 /* ManifestModelTests.swift */; };
 		D2FB5A6236129E9612315C18 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E9924DA9ED0BC7A9B0E16C5 /* SettingsView.swift */; };
 		D3976B39B19DDC345D569992 /* CorruptionResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CE2046EE687FD03061E8119 /* CorruptionResult.swift */; };
+		D99E1945CEA3EBD21AD774E5 /* MXFCorpusRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7686391AE5AF0A2B335EB2B /* MXFCorpusRequest.swift */; };
 		D9FA89B7E153072F3C839F82 /* MP4Corruptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2D24F29A735737D8645DFDD /* MP4Corruptor.swift */; };
 		DAB7C0F995EA5B2DBC0B6C62 /* Data+BigEndian.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCDD10E196D9135F182596FF /* Data+BigEndian.swift */; };
 		E0DCD104E26954F98E1EF23B /* CorruptionContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 640BA4C9FBCD1C6B53FE8F6C /* CorruptionContext.swift */; };
 		E52419F3BE01150185888A17 /* VideoFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8FD8C8476DFFEA8D8A51C74 /* VideoFormat.swift */; };
+		E5E9748835DB9A31A0C2A9AD /* MXFCorpusReport.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF3F5B2BB6042A4F762D7264 /* MXFCorpusReport.swift */; };
 		F7EA39FAA20608D3D4DE21DD /* TypeSelectionPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C352E2AF4D50898E9AF9245 /* TypeSelectionPane.swift */; };
 		FAB52FAD1E9B69E6692239E7 /* CorruptionHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A94483698E291C4D54038F2 /* CorruptionHandler.swift */; };
 /* End PBXBuildFile section */
@@ -85,6 +91,7 @@
 		741FBB420C51877EFD744DB9 /* VideoFile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoFile.swift; sourceTree = "<group>"; };
 		769D193F6A74AEFF41C67321 /* CheckedDataAccess.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckedDataAccess.swift; sourceTree = "<group>"; };
 		775B39D32CBDA2691A67DF5B /* CorruptionConflict.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CorruptionConflict.swift; sourceTree = "<group>"; };
+		7DFD34ABA3FAA2D9017C54AD /* MXFFixtureManifest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXFFixtureManifest.swift; sourceTree = "<group>"; };
 		7EEFCFBB8C73C3EFD2605D9D /* VideoCorruptor.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = VideoCorruptor.entitlements; sourceTree = "<group>"; };
 		81AE5D5D10FACF471B12495A /* MXFParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXFParser.swift; sourceTree = "<group>"; };
 		833772B5ADBFB6AA6FD3060D /* ByteSpan.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ByteSpan.swift; sourceTree = "<group>"; };
@@ -97,7 +104,9 @@
 		A711197ACB9AD8E806EF6621 /* VideoCorruptorTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = VideoCorruptorTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		ABE13CF6633663ABB5C908B5 /* BatchManifest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatchManifest.swift; sourceTree = "<group>"; };
 		AC88E4FD30110A7F3992E0C5 /* VideoCorruptor.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = VideoCorruptor.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B13C82E95B8BC1E0A453CDE0 /* MXFMutationRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXFMutationRecord.swift; sourceTree = "<group>"; };
 		B3026E1A39B73D45BE3AD695 /* SeededRNG.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SeededRNG.swift; sourceTree = "<group>"; };
+		C887397EEE27806835832D16 /* ManifestModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManifestModelTests.swift; sourceTree = "<group>"; };
 		CCC6D36CEEE603CA04C2E743 /* MP4FrameMapBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MP4FrameMapBuilder.swift; sourceTree = "<group>"; };
 		CCDD10E196D9135F182596FF /* Data+BigEndian.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Data+BigEndian.swift"; sourceTree = "<group>"; };
 		D00EAA991147AFB9F194B89E /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -105,10 +114,13 @@
 		D9B0C6B1A1810CDDFD3A5F89 /* SmokeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmokeTests.swift; sourceTree = "<group>"; };
 		DCB716F5A4B85B0D5703388F /* MP4Parser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MP4Parser.swift; sourceTree = "<group>"; };
 		DED7AAC1DBFD5AA9C58D788C /* CorruptionEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CorruptionEngine.swift; sourceTree = "<group>"; };
+		E94918B140C9BC0EC60A8F1C /* MXFFixtureDefinition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXFFixtureDefinition.swift; sourceTree = "<group>"; };
 		E9F4B55FD9F7C58C6388E609 /* FileCorruptor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileCorruptor.swift; sourceTree = "<group>"; };
+		F7686391AE5AF0A2B335EB2B /* MXFCorpusRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXFCorpusRequest.swift; sourceTree = "<group>"; };
 		FB845D28EBF6EBB3230696BB /* SeedDerivation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SeedDerivation.swift; sourceTree = "<group>"; };
 		FC23F2AC0EEFDA091FBAED40 /* CorruptorViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CorruptorViewModel.swift; sourceTree = "<group>"; };
 		FD5653146F430E1E3B03B75D /* MP4Atom.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MP4Atom.swift; sourceTree = "<group>"; };
+		FF3F5B2BB6042A4F762D7264 /* MXFCorpusReport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXFCorpusReport.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -124,6 +136,14 @@
 				BE3C46390ECAE23AD873CB30 /* AppKit */,
 			);
 			path = Views;
+			sourceTree = "<group>";
+		};
+		15F263F0F081BA6B6F97BD9A /* MXFCorpus */ = {
+			isa = PBXGroup;
+			children = (
+				4DD6F7E535B3E1305C0927CB /* Models */,
+			);
+			path = MXFCorpus;
 			sourceTree = "<group>";
 		};
 		1EEDA937CEEF7FFC555FEF71 = {
@@ -182,8 +202,17 @@
 			children = (
 				D9B0C6B1A1810CDDFD3A5F89 /* SmokeTests.swift */,
 				23B8ED44ABE24C34D3085216 /* Binary */,
+				15F263F0F081BA6B6F97BD9A /* MXFCorpus */,
 			);
 			path = VideoCorruptorTests;
+			sourceTree = "<group>";
+		};
+		4DD6F7E535B3E1305C0927CB /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				C887397EEE27806835832D16 /* ManifestModelTests.swift */,
+			);
+			path = Models;
 			sourceTree = "<group>";
 		};
 		5453A8E456D7D9B6240BA53B /* Models */ = {
@@ -212,6 +241,14 @@
 			path = MXFParser;
 			sourceTree = "<group>";
 		};
+		777A5446F0C400B82EC9513C /* MXFCorpus */ = {
+			isa = PBXGroup;
+			children = (
+				83108A095FEFE02459D8C2E7 /* Models */,
+			);
+			path = MXFCorpus;
+			sourceTree = "<group>";
+		};
 		80645B2A5B70F4E32ECBF43C /* App */ = {
 			isa = PBXGroup;
 			children = (
@@ -219,6 +256,18 @@
 				24EC84C2B2DF75866BB7E65A /* VideoCorruptorApp.swift */,
 			);
 			path = App;
+			sourceTree = "<group>";
+		};
+		83108A095FEFE02459D8C2E7 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				FF3F5B2BB6042A4F762D7264 /* MXFCorpusReport.swift */,
+				F7686391AE5AF0A2B335EB2B /* MXFCorpusRequest.swift */,
+				E94918B140C9BC0EC60A8F1C /* MXFFixtureDefinition.swift */,
+				7DFD34ABA3FAA2D9017C54AD /* MXFFixtureManifest.swift */,
+				B13C82E95B8BC1E0A453CDE0 /* MXFMutationRecord.swift */,
+			);
+			path = Models;
 			sourceTree = "<group>";
 		};
 		9981997B4D266DD54D34C609 /* ViewModels */ = {
@@ -276,6 +325,7 @@
 				A90AEE3802DDD863877144EC /* Binary */,
 				BF9346B5E13D1EDA9FEE372F /* Corruptors */,
 				3EB2411BFA14A1DE8F65CF09 /* MP4Parser */,
+				777A5446F0C400B82EC9513C /* MXFCorpus */,
 				7675CA743A71A8505B3355F6 /* MXFParser */,
 				FF9D3370086C747C62C20356 /* Seed */,
 			);
@@ -411,8 +461,13 @@
 				D9FA89B7E153072F3C839F82 /* MP4Corruptor.swift in Sources */,
 				2355172797BD6B5D38DDF062 /* MP4FrameMapBuilder.swift in Sources */,
 				B102420A95AE06FB13CDB85A /* MP4Parser.swift in Sources */,
+				E5E9748835DB9A31A0C2A9AD /* MXFCorpusReport.swift in Sources */,
+				D99E1945CEA3EBD21AD774E5 /* MXFCorpusRequest.swift in Sources */,
 				99BDC1E68A77F0C4FE0EAE0E /* MXFCorruptor.swift in Sources */,
 				7EF5E460C2B51A0FF9025EF6 /* MXFElement.swift in Sources */,
+				15AF87B32643F46E1A6D123A /* MXFFixtureDefinition.swift in Sources */,
+				C4643418EA0C57DE73268855 /* MXFFixtureManifest.swift in Sources */,
+				56E0FD2E489F621A215736F6 /* MXFMutationRecord.swift in Sources */,
 				3CE56C04F297776F17F057CA /* MXFParser.swift in Sources */,
 				628020550863D152B63A47B4 /* SeedDerivation.swift in Sources */,
 				C97A6CFC03620A50A3836832 /* SeedFormatting.swift in Sources */,
@@ -432,6 +487,7 @@
 			files = (
 				943DD23514988E1982155D7E /* CheckedBinaryArithmeticTests.swift in Sources */,
 				4B388CD8AB73AF39478000B3 /* CheckedDataAccessTests.swift in Sources */,
+				D130489E98036D03F21B78AA /* ManifestModelTests.swift in Sources */,
 				CC37DE9DC6B1539D2C315523 /* SmokeTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
