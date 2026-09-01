@@ -21,6 +21,11 @@ enum SeedDerivation {
         SeededRNG(seed: derive(master: master, key: type.rawValue))
     }
 
+    /// Create an independent RNG stream for a stable fixture ID or other string key.
+    static func rng(master: UInt64, key: String) -> SeededRNG {
+        SeededRNG(seed: derive(master: master, key: key))
+    }
+
     private static func splitmix(_ seed: UInt64) -> UInt64 {
         var z = seed &+ 0x9E3779B97F4A7C15
         z = (z ^ (z >> 30)) &* 0xBF58476D1CE4E5B9
