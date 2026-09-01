@@ -189,6 +189,9 @@ struct MXFCorpusGenerator: Sendable {
             }
         }
 
+        // Source iteration determines applicability, but the schema's canonical ordering is by
+        // stable fixture ID and must not depend on which synthetic/real source satisfied it.
+        entries.sort { $0.id < $1.id }
         let manifest = MXFFixtureManifest(generator: generatorIdentity, fixtures: entries)
         let manifestData = try MXFManifestEncoder().encode(manifest)
         try manifestData.write(
