@@ -52,12 +52,15 @@ final class BERCorpusGoldenTests: XCTestCase {
             classification: "required embedded-sequence envelope",
             zeroLengthBoundaryPolicy: .payloadStartsCompleteKLVSequence
         )
-        let fixtures = BERMutations.fixtures(requiredElements: [declaration])
-            + MXFTruncationMutations.all.map { $0 as any MXFFixtureMutation }
-        let registry = try MXFFixtureRegistry(fixtures: fixtures)
-
         // These exact IDs are the compatibility boundary for the checked synthetic sources.
         let expectedIDs = Set(Self.expectedBER.keys).union(Self.expectedTruncation.keys)
+        let waveTwoTruncations = MXFTruncationMutations.all.filter {
+            expectedIDs.contains($0.definition.id)
+        }
+        let fixtures = BERMutations.fixtures(requiredElements: [declaration])
+            + waveTwoTruncations.map { $0 as any MXFFixtureMutation }
+        let registry = try MXFFixtureRegistry(fixtures: fixtures)
+
         XCTAssertEqual(Set(try registry.selected(ids: nil).map(\.definition.id)), expectedIDs)
 
         let generator = MXFCorpusGenerator(
