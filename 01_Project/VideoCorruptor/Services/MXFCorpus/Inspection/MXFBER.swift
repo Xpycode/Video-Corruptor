@@ -136,6 +136,85 @@ enum MXFBER {
         )
     }
 
+    /// Decodes a compact BER header read from a file while retaining its physical offset.
+    /// `header` must start at the BER first octet and need never exceed nine bytes.
+    static func decodeHeader(
+        _ header: Data,
+        atPhysicalOffset offset: UInt64,
+        maximumValue: UInt64 = .max
+    ) throws -> MXFBERDecodedLength {
+        guard let first = header.first else {
+            throw MXFBERError.truncatedHeader(offset: offset, requiredWidth: 1, availableWidth: 0)
+        }
+        if first < 0x80 {
+            let value = UInt64(first)
+            guard value <= maximumValue else {
+                throw MXFBERError.lengthLimitExceeded(value: value, limit: maximumValue)
+            }
+            return MXFBERDecodedLength(
+                value: value,
+                encodedWidth: 1,
+                physicalSpan: try ByteSpan(offset: offset, length: 1),
+                form: .short,
+                canonicality: .canonical,
+                diagnostics: []
+            )
+        }
+
+        let lengthOctetCount = first & 0x7f
+        guard lengthOctetCount != 0 else {
+            throw MXFBERError.reservedIndefiniteForm(offset: offset)
+        }
+        guard lengthOctetCount <= maximumLengthOctetCount else {
+            throw MXFBERError.excessiveLengthOfLength(
+                offset: offset,
+                lengthOctetCount: lengthOctetCount,
+                maximum: maximumLengthOctetCount
+            )
+        }
+        let encodedWidth = UInt64(lengthOctetCount) + 1
+        guard encodedWidth <= UInt64(header.count) else {
+            throw MXFBERError.truncatedHeader(
+                offset: offset,
+                requiredWidth: encodedWidth,
+                availableWidth: UInt64(header.count)
+            )
+        }
+
+        var value: UInt64 = 0
+        for index in 1...Int(lengthOctetCount) {
+            do {
+                value = try CheckedBinaryArithmetic.add(
+                    CheckedBinaryArithmetic.multiply(value, 256),
+                    UInt64(header[index])
+                )
+            } catch {
+                throw MXFBERError.valueOverflow(offset: offset)
+            }
+        }
+        guard value <= maximumValue else {
+            throw MXFBERError.lengthLimitExceeded(value: value, limit: maximumValue)
+        }
+
+        var diagnostics: [MXFBERDiagnostic] = []
+        if header[1] == 0 { diagnostics.append(.leadingZeroLengthOctet) }
+        let minimumCount = minimumLongFormOctetCount(for: value)
+        if value < 0x80 || lengthOctetCount > minimumCount {
+            diagnostics.append(.nonMinimalLongForm(
+                minimumLengthOctetCount: minimumCount,
+                actualLengthOctetCount: lengthOctetCount
+            ))
+        }
+        return MXFBERDecodedLength(
+            value: value,
+            encodedWidth: encodedWidth,
+            physicalSpan: try ByteSpan(offset: offset, length: encodedWidth),
+            form: .long(lengthOctetCount: lengthOctetCount),
+            canonicality: diagnostics.isEmpty ? .canonical : .nonCanonical,
+            diagnostics: diagnostics
+        )
+    }
+
     private static func checkedWidth(offset: UInt64, lengthOctetCount: UInt8) throws -> UInt64 {
         do {
             return try CheckedBinaryArithmetic.add(1, UInt64(lengthOctetCount))

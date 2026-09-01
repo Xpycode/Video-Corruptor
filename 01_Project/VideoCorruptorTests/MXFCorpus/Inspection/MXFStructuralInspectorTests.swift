@@ -195,8 +195,56 @@ final class MXFStructuralInspectorTests: XCTestCase {
         XCTAssertEqual(eof.diagnostics, [])
     }
 
+    func testFileInspectionSeeksAcrossLargeValueWithoutReadingIt() throws {
+        let url = try temporaryFile()
+        let handle = try FileHandle(forUpdating: url)
+        let valueLength: UInt64 = 1 << 20
+        try handle.write(contentsOf: key() + Data([0x83, 0x10, 0x00, 0x00]))
+        let secondOffset = 20 + valueLength
+        try handle.seek(toOffset: secondOffset)
+        try handle.write(contentsOf: key(0x22) + Data([0x00]))
+        try handle.close()
+
+        let result = try inspector.inspect(
+            fileAt: url,
+            limits: limits(maximumAllocationBytes: valueLength)
+        )
+
+        XCTAssertTrue(result.completedWalk)
+        XCTAssertEqual(result.elements.count, 2)
+        XCTAssertEqual(result.elements[0].valueSpan?.length, valueLength)
+        XCTAssertEqual(result.elements[1].keySpan.lowerBound, secondOffset)
+    }
+
+    func testFileInspectionCancellationAndInputBoundAreDiagnostic() throws {
+        let url = try temporaryFile(contents: key() + Data([0x01, 0xaa]))
+        let limited = try inspector.inspect(
+            fileAt: url,
+            limits: limits(maximumInputBytes: 17)
+        )
+        XCTAssertEqual(limited.diagnostics, [
+            .limitExceeded(limit: .inputBytes, actual: 18, maximum: 17)
+        ])
+
+        let cancelled = try inspector.inspect(fileAt: url) { checkpoint in
+            checkpoint == .afterBER(offset: 16)
+        }
+        XCTAssertEqual(cancelled.elements, [])
+        XCTAssertEqual(cancelled.diagnostics, [
+            .cancelled(checkpoint: .afterBER(offset: 16))
+        ])
+    }
+
     private func key(_ byte: UInt8 = 0x11) -> Data {
         Data(repeating: byte, count: 16)
+    }
+
+    private func temporaryFile(contents: Data = Data()) throws -> URL {
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent("MXFStructuralInspectorTests-\(UUID().uuidString)")
+        try contents.write(to: url)
+        addTeardownBlock { try? FileManager.default.removeItem(at: url) }
+        return url
     }
 
     private func limits(

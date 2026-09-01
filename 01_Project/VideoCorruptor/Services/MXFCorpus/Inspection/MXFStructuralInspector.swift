@@ -223,6 +223,157 @@ struct MXFStructuralInspector: Sendable {
         )
     }
 
+    func inspect(
+        fileAt url: URL,
+        trustedStartOffset: UInt64 = 0,
+        limits: MXFInspectionLimits = MXFInspectionLimits(),
+        shouldCancel: MXFInspectionCancellationCheck = { _ in false }
+    ) throws -> MXFInspectedFile {
+        let handle = try FileHandle(forReadingFrom: url)
+        defer { try? handle.close() }
+        let inputByteCount = try handle.seekToEnd()
+
+        if shouldCancel(.beforeInspection) {
+            return result(inputByteCount: inputByteCount, trustedStartOffset: trustedStartOffset,
+                          diagnostics: [.cancelled(checkpoint: .beforeInspection)])
+        }
+        guard inputByteCount <= limits.maximumInputBytes else {
+            return result(inputByteCount: inputByteCount, trustedStartOffset: trustedStartOffset,
+                          diagnostics: [.limitExceeded(limit: .inputBytes, actual: inputByteCount,
+                                                       maximum: limits.maximumInputBytes)])
+        }
+        guard trustedStartOffset <= inputByteCount else {
+            return result(inputByteCount: inputByteCount, trustedStartOffset: trustedStartOffset,
+                          diagnostics: [.invalidTrustedStart(offset: trustedStartOffset,
+                                                             inputByteCount: inputByteCount)])
+        }
+
+        var offset = trustedStartOffset
+        var elements: [MXFInspectedElement] = []
+        var diagnostics: [MXFStructuralDiagnostic] = []
+        var partialElement: MXFPartialElement?
+        var candidateCount: UInt64 = 0
+
+        while offset < inputByteCount {
+            let beforeElement = MXFInspectionCheckpoint.beforeElement(offset: offset)
+            if shouldCancel(beforeElement) {
+                diagnostics.append(.cancelled(checkpoint: beforeElement))
+                break
+            }
+            guard candidateCount < limits.maximumElementCount else {
+                diagnostics.append(.limitExceeded(limit: .elementCount,
+                                                   actual: incremented(candidateCount),
+                                                   maximum: limits.maximumElementCount))
+                break
+            }
+            candidateCount = incremented(candidateCount)
+            let remaining = inputByteCount - offset
+            guard remaining >= Self.keyByteCount else {
+                partialElement = .truncatedKey(
+                    offset: offset,
+                    availableSpan: optionalSpan(offset: offset, length: remaining)
+                )
+                diagnostics.append(.truncatedKey(offset: offset, availableByteCount: remaining))
+                break
+            }
+            guard Self.keyByteCount <= limits.maximumAllocationBytes else {
+                diagnostics.append(.limitExceeded(limit: .allocationBytes,
+                                                   actual: Self.keyByteCount,
+                                                   maximum: limits.maximumAllocationBytes))
+                break
+            }
+
+            let keySpan = try ByteSpan(offset: offset, length: Self.keyByteCount)
+            let berOffset = try CheckedBinaryArithmetic.add(offset, Self.keyByteCount)
+            try handle.seek(toOffset: offset)
+            guard let key = try handle.read(upToCount: Int(Self.keyByteCount)),
+                  key.count == Int(Self.keyByteCount) else {
+                partialElement = .truncatedKey(offset: offset, availableSpan: nil)
+                diagnostics.append(.truncatedKey(offset: offset, availableByteCount: remaining))
+                break
+            }
+
+            let availableBERBytes = min(UInt64(1 + MXFBER.maximumLengthOctetCount),
+                                        inputByteCount - berOffset)
+            try handle.seek(toOffset: berOffset)
+            let header = try handle.read(upToCount: Int(availableBERBytes)) ?? Data()
+            let ber: MXFBERDecodedLength
+            do {
+                ber = try MXFBER.decodeHeader(header, atPhysicalOffset: berOffset,
+                                              maximumValue: limits.maximumBERValueLength)
+            } catch let error as MXFBERError {
+                if case .lengthLimitExceeded(let value, let limit) = error {
+                    diagnostics.append(.limitExceeded(limit: .berValueLength, actual: value,
+                                                       maximum: limit))
+                } else {
+                    diagnostics.append(.malformedBER(offset: berOffset, error: error))
+                }
+                partialElement = .malformedBER(keySpan: keySpan, berOffset: berOffset)
+                break
+            }
+            diagnostics.append(contentsOf: ber.diagnostics.map {
+                .nonCanonicalBER(offset: berOffset, diagnostic: $0)
+            })
+            let afterBER = MXFInspectionCheckpoint.afterBER(offset: berOffset)
+            if shouldCancel(afterBER) {
+                diagnostics.append(.cancelled(checkpoint: afterBER))
+                break
+            }
+            guard ber.value <= limits.maximumAllocationBytes else {
+                diagnostics.append(.limitExceeded(limit: .allocationBytes, actual: ber.value,
+                                                   maximum: limits.maximumAllocationBytes))
+                break
+            }
+
+            let valueOffset = try CheckedBinaryArithmetic.add(berOffset, ber.encodedWidth)
+            let valueEnd: UInt64
+            do {
+                valueEnd = try CheckedBinaryArithmetic.add(valueOffset, ber.value)
+            } catch {
+                diagnostics.append(.integerOverflow(offset: valueOffset, operation: .valueEnd))
+                break
+            }
+            guard valueEnd <= inputByteCount else {
+                let available = inputByteCount - valueOffset
+                partialElement = .truncatedValue(
+                    keySpan: keySpan,
+                    ber: ber,
+                    valueOffset: valueOffset,
+                    availableValueSpan: optionalSpan(offset: valueOffset, length: available)
+                )
+                diagnostics.append(.truncatedValue(offset: valueOffset,
+                                                    declaredByteCount: ber.value,
+                                                    availableByteCount: available))
+                break
+            }
+            elements.append(MXFInspectedElement(
+                key: key,
+                keySpan: keySpan,
+                ber: ber,
+                valueSpan: ber.value == 0 ? nil : try ByteSpan(offset: valueOffset, length: ber.value),
+                physicalSpan: try ByteSpan(lowerBound: offset, upperBound: valueEnd)
+            ))
+            offset = valueEnd
+            let afterElement = MXFInspectionCheckpoint.afterElement(offset: offset)
+            if shouldCancel(afterElement) {
+                diagnostics.append(.cancelled(checkpoint: afterElement))
+                break
+            }
+        }
+
+        return MXFInspectedFile(
+            inputByteCount: inputByteCount,
+            trustedStartOffset: trustedStartOffset,
+            elements: elements,
+            partialElement: partialElement,
+            counters: MXFInspectionCounters(candidateCount: candidateCount,
+                                            completeElementCount: UInt64(elements.count),
+                                            inspectedByteCount: offset - trustedStartOffset),
+            diagnostics: diagnostics,
+            completedWalk: offset == inputByteCount && containsOnlyWarnings(diagnostics)
+        )
+    }
+
     private func result(
         inputByteCount: UInt64,
         trustedStartOffset: UInt64,
