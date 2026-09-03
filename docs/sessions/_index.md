@@ -10,6 +10,7 @@ VideoCorruptor - macOS tool for generating corrupted video test files
 
 | Date | Focus | Outcome | Log |
 |------|-------|---------|-----|
+| 2026-09-03 | Checkpoint the MXF corpus and correct macOS toolbar rendering | Corpus work was pushed; the accepted SAR-style toolbar removes macOS 26 glass circles and preserves trailing placement. All 153 tests pass. Next: three manual acceptance checks. | [Log](2026-09-03.md) |
 | 2026-09-02 | Complete and consumer-validate the adversarial MXF corpus | All seven waves complete: 19 controlled fixtures map to 10 accepted and 9 exact rejections; 153 producer tests pass. Next: PlayPlayPlay Release performance matrix. | [Log](2026-09-02.md) |
 | 2026-09-02 | Complete Wave 4 local-set, count, and index semantics | Added bounded inspectors plus 12 exact count/index fixtures; Debug build and all 144 tests pass. Next: Wave 5 controlled sources and release validation. | [Log](2026-09-02.md) |
 | 2026-09-01 | Build the adversarial MXF corpus through Wave 3 | Completed deterministic schema/generation, BER and truncation goldens, bounded partition graphs, offset/cycle fixtures, and profile-aware missing structures; 118 tests pass. Next: Wave 4 local sets, counts, and index semantics. | [log](2026-09-01.md) |

@@ -9,6 +9,9 @@ struct VideoCorruptorApp: App {
             ContentView()
                 .environment(viewModel)
         }
+        // Match the compact unified toolbar shell used by Conjoyn and
+        // Penumbra instead of reserving a separate standard title strip.
+        .windowStyle(.hiddenTitleBar)
         .defaultSize(width: 900, height: 600)
 
         Settings {

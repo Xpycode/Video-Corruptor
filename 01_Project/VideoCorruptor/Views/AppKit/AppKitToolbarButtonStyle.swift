@@ -1,33 +1,19 @@
 import SwiftUI
 
-/// Toolbar button with native AppKit appearance.
-/// Flat background, 4pt corners, accent color when active.
+/// Compact titlebar control matching the app-shell pattern used by SAR.
 struct AppKitToolbarButtonStyle: ButtonStyle {
     @Binding var isOn: Bool
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .padding(.horizontal, 8)
-            .padding(.vertical, 6)
-            .foregroundColor(isOn ? .white : .primary)
+            .font(.system(size: 14, weight: .semibold))
+            .foregroundStyle(isOn ? Color.white : Color.primary)
+            .frame(width: 28, height: 28)
             .background(
-                ZStack {
-                    if isOn {
-                        Color.accentColor
-                    } else {
-                        Color(nsColor: .gray.withAlphaComponent(0.2))
-                    }
-                    if configuration.isPressed {
-                        Color.black.opacity(0.2)
-                    }
-                }
+                isOn ? Color.accentColor : Color.primary.opacity(0.07),
+                in: RoundedRectangle(cornerRadius: 6)
             )
-            .cornerRadius(4)
-            .overlay(
-                RoundedRectangle(cornerRadius: 4)
-                    .stroke(Color.black.opacity(0.2), lineWidth: 1)
-            )
-            .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
-            .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
+            .opacity(configuration.isPressed ? 0.7 : 1)
+            .contentShape(RoundedRectangle(cornerRadius: 6))
     }
 }

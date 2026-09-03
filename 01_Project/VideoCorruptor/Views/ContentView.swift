@@ -35,45 +35,11 @@ struct ContentView: View {
         }
         .autosaveSplitView(named: "MainSplitView")
         .toolbar {
-            ToolbarItemGroup(placement: .navigation) {
-                Button(action: {
-                    if viewModel.isBatchMode {
-                        viewModel.batchViewModel.openFilePicker()
-                    } else {
-                        viewModel.openFilePicker()
-                    }
-                }) {
-                    Image(systemName: "plus")
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: 16, height: 16)
-                }
-                .help("Open a video file")
-                .buttonStyle(AppKitToolbarButtonStyle(isOn: .constant(false)))
-            }
-
-            ToolbarItemGroup(placement: .primaryAction) {
-                HStack {
-                    Button(action: { vm.isBatchMode.toggle() }) {
-                        Image(systemName: "square.stack.3d.up")
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(width: 16, height: 16)
-                    }
-                    .help("Process multiple files at once")
-                    .buttonStyle(AppKitToolbarButtonStyle(isOn: $vm.isBatchMode))
-
-                    if viewModel.hasSource {
-                        Button(action: { viewModel.clearAll() }) {
-                            Image(systemName: "xmark.circle")
-                                .resizable()
-                                .aspectRatio(contentMode: .fit)
-                                .frame(width: 16, height: 16)
-                        }
-                        .help("Clear current file and selections")
-                        .buttonStyle(AppKitToolbarButtonStyle(isOn: .constant(false)))
-                    }
-                }
+            if #available(macOS 26.0, *) {
+                toolbarItems
+                    .sharedBackgroundVisibility(.hidden)
+            } else {
+                toolbarItems
             }
         }
         .toolbarRole(.editor)
@@ -92,6 +58,55 @@ struct ContentView: View {
         } message: {
             Text(vm.errorMessage ?? "")
         }
+    }
+
+    @ToolbarContentBuilder
+    private var toolbarItems: some ToolbarContent {
+            ToolbarItemGroup(placement: .navigation) {
+                Button(action: {
+                    if viewModel.isBatchMode {
+                        viewModel.batchViewModel.openFilePicker()
+                    } else {
+                        viewModel.openFilePicker()
+                    }
+                }) {
+                    Image(systemName: "plus")
+                }
+                .help("Open a video file")
+                .buttonStyle(AppKitToolbarButtonStyle(isOn: .constant(false)))
+            }
+
+            // A real principal item gives NSToolbar the flexible-space anchors
+            // it needs to keep primary actions at the trailing edge.
+            ToolbarItemGroup(placement: .principal) {
+                Spacer()
+                    .frame(width: 1, height: 1)
+                    .accessibilityHidden(true)
+            }
+
+            ToolbarItemGroup(placement: .primaryAction) {
+                HStack(spacing: 7) {
+                    Button(action: { viewModel.isBatchMode.toggle() }) {
+                        Image(systemName: "square.stack.3d.up")
+                    }
+                    .help("Process multiple files at once")
+                    .buttonStyle(AppKitToolbarButtonStyle(isOn: Binding(
+                        get: { viewModel.isBatchMode },
+                        set: { viewModel.isBatchMode = $0 }
+                    )))
+
+                    if viewModel.hasSource {
+                        Button(action: { viewModel.clearAll() }) {
+                            Image(systemName: "xmark.circle")
+                        }
+                        .help("Clear current file and selections")
+                        .buttonStyle(AppKitToolbarButtonStyle(isOn: .constant(false)))
+                    }
+                }
+                // Prevent SwiftUI from adding a second toolbar-button wrapper
+                // around the custom fixed-size button boxes.
+                .buttonStyle(.borderless)
+            }
     }
 
     // MARK: - Footer Bar

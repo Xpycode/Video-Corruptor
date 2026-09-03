@@ -9,9 +9,9 @@
 ## Current Position
 - **Funnel:** build
 - **Phase:** implementation
-- **Focus:** MXF adversarial corpus complete: generated fixtures and PlayPlayPlay mappings are verified
-- **Status:** complete for the MXF corpus plan
-- **Last updated:** 2026-09-02 (Waves 0–6 complete and verified)
+- **Focus:** MXF adversarial corpus complete; macOS 26 toolbar rendering corrected and accepted
+- **Status:** ready for the remaining manual seed, mixed-format batch, and blocker-gating checks
+- **Last updated:** 2026-09-03 (toolbar accepted; full test suite green)
 
 ## Funnel Progress
 
@@ -40,7 +40,7 @@
 | Dimension | Status | Notes |
 |-----------|--------|-------|
 | Features | 🔶 WIP | 19 corruption types + seed/severity/stacking/batch |
-| UI/Polish | 🔶 WIP | AppKit buttons + toolbar style applied, toolbar rendering WIP |
+| UI/Polish | ✅ done | Compact SAR-style toolbar accepted on macOS 26 |
 | Testing | ✅ done | Wave 6 gate passes: 153 automated tests, 0 failures, 1 opt-in export skip |
 | Docs | ✅ done | MXF corpus audit and approved implementation spec recorded |
 | Distribution | ⚪ — | Dev tool, may not need distribution |
@@ -61,6 +61,9 @@
 None
 
 ## Latest Verification
+- **2026-09-03:** The toolbar now uses the compact hidden-titlebar shell, 28-point SAR-style controls,
+  correct leading/trailing placement, and macOS 26 shared-background suppression. Visual review passed;
+  the Debug build succeeds and all 153 tests pass with the expected opt-in export skip.
 - **2026-09-02:** Wave 6 complete. PlayPlayPlay validates the separate adversarial manifest through
   its real CBMX-backed structural path with stable errors, explicit resource budgets, and deterministic
   cancellation. Nineteen project-owned fixtures are approved: 10 accepted and 9 exact rejections;
