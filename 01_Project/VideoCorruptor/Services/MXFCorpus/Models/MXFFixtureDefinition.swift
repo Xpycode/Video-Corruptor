@@ -96,9 +96,45 @@ enum MXFCorpusClass: String, Codable, Sendable {
 }
 
 enum MXFFixtureLifecycle: String, Codable, Sendable {
+    /// Schema-v1 compatibility for definitions created before release stages were explicit.
     case draft
+    case generated
+    case structurallyVerified
+    case consumerMapped
     case approved
     case deprecated
+}
+
+enum MXFFixtureLifecycleTransitionError: Error, Equatable, Sendable {
+    case outOfOrder(from: MXFFixtureLifecycle, to: MXFFixtureLifecycle)
+    case missingConsumerCode(stage: MXFFixtureLifecycle)
+}
+
+enum MXFFixtureLifecycleTransition {
+    /// Validates one release transition. `draft` is retained as a schema-v1 authoring state and
+    /// may only enter the ordered release lifecycle at `generated`.
+    static func validate(
+        from: MXFFixtureLifecycle,
+        to: MXFFixtureLifecycle,
+        consumerCode: String?
+    ) throws {
+        let allowed: Bool = switch (from, to) {
+        case (.draft, .generated), (.generated, .structurallyVerified),
+             (.structurallyVerified, .consumerMapped), (.consumerMapped, .approved):
+            true
+        default:
+            false
+        }
+        guard allowed else {
+            throw MXFFixtureLifecycleTransitionError.outOfOrder(from: from, to: to)
+        }
+        if to == .consumerMapped || to == .approved {
+            guard let consumerCode,
+                  !consumerCode.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                throw MXFFixtureLifecycleTransitionError.missingConsumerCode(stage: to)
+            }
+        }
+    }
 }
 
 enum MXFExpectedOutcome: String, Codable, Sendable {

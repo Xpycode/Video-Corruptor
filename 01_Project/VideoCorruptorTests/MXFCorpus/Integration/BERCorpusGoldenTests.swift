@@ -89,13 +89,13 @@ final class BERCorpusGoldenTests: XCTestCase {
         XCTAssertEqual(sha256(firstManifest), sha256(secondManifest))
         XCTAssertEqual(
             sha256(firstManifest),
-            "b0b8d7fbd59124321cc9786257467257c575c2e70ac24d7c35e8281aa7f1efc3"
+            "c62b56804a4570b346b074f4c9969758139a8e76cb6d3cafab6bae12f5e70818"
         )
 
         for entry in firstReport.manifest.fixtures {
             let expected = Self.expectedBER[entry.id] ?? Self.expectedTruncation[entry.id]
             XCTAssertEqual(entry.corpusClass, .parserConformance, entry.id)
-            XCTAssertEqual(entry.lifecycle, .draft, entry.id)
+            XCTAssertEqual(entry.lifecycle, .structurallyVerified, entry.id)
             XCTAssertEqual(entry.mutationSchemaVersion, 1, entry.id)
             XCTAssertEqual(entry.expected.outcome, expected?.0, entry.id)
             XCTAssertEqual(entry.expected.category, expected?.1, entry.id)

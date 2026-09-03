@@ -13,7 +13,7 @@ final class PartitionMutationTests: XCTestCase {
         ]
         for item in cases {
             let generated = try await generate(id: item.0, data: fixture(partitionCount: 2, trailing: true))
-            XCTAssertEqual(generated.entry.lifecycle, .draft, item.0)
+            XCTAssertEqual(generated.entry.lifecycle, .structurallyVerified, item.0)
             XCTAssertEqual(generated.entry.expected.category, item.1, item.0)
             XCTAssertNil(generated.entry.expected.consumerCode, item.0)
             XCTAssertEqual(generated.entry.source.profile, "synthetic.op1a.partition.v1", item.0)

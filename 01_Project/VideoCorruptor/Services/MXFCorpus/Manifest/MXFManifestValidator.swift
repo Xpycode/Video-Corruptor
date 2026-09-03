@@ -71,7 +71,7 @@ struct MXFManifestValidator: Sendable {
                 reason: "mutation schema version must be positive"
             )
         }
-        if fixture.lifecycle == .approved {
+        if fixture.lifecycle == .consumerMapped || fixture.lifecycle == .approved {
             guard let consumerCode = fixture.expected.consumerCode,
                   !consumerCode.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
                 throw MXFManifestValidationError.missingConsumerCode(fixtureID: fixture.id)

@@ -10,7 +10,9 @@ VideoCorruptor - macOS tool for generating corrupted video test files
 
 | Date | Focus | Outcome | Log |
 |------|-------|---------|-----|
-| 2026-09-01 | Recover VideoCorruptor and define PlayPlayPlay's adversarial MXF corpus | Recovered the app, completed the MXF audit, approved the corpus spec and policies, and created a 33-task implementation plan. Next: execute Wave 0's test and schema foundations. | [log](2026-09-01.md) |
+| 2026-09-02 | Complete and consumer-validate the adversarial MXF corpus | All seven waves complete: 19 controlled fixtures map to 10 accepted and 9 exact rejections; 153 producer tests pass. Next: PlayPlayPlay Release performance matrix. | [Log](2026-09-02.md) |
+| 2026-09-02 | Complete Wave 4 local-set, count, and index semantics | Added bounded inspectors plus 12 exact count/index fixtures; Debug build and all 144 tests pass. Next: Wave 5 controlled sources and release validation. | [Log](2026-09-02.md) |
+| 2026-09-01 | Build the adversarial MXF corpus through Wave 3 | Completed deterministic schema/generation, BER and truncation goldens, bounded partition graphs, offset/cycle fixtures, and profile-aware missing structures; 118 tests pass. Next: Wave 4 local sets, counts, and index semantics. | [log](2026-09-01.md) |
 | 2026-02-27e | UI polish: AppKit controls | AppKitButton + AppKitToolbarButtonStyle, mode picker moved, processing overlay | [log](2026-02-27e.md) |
 | 2026-02-27d | Reliability hardening | 9/9 fixes applied (2 critical, 4 high, 3 medium), clean build, pushed | [log](2026-02-27.md) |
 | 2026-02-27c | Code review & fix plan | Verified 9 issues, rejected 3 false claims, saved fix plan | [log](2026-02-27.md) |

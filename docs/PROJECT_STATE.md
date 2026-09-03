@@ -9,9 +9,9 @@
 ## Current Position
 - **Funnel:** build
 - **Phase:** implementation
-- **Focus:** Wave 2 of the MXF corpus plan: BER mutations and generic boundary truncation
-- **Status:** active
-- **Last updated:** 2026-09-01 (repository recovered for PlayPlayPlay MXF corpus work)
+- **Focus:** MXF adversarial corpus complete: generated fixtures and PlayPlayPlay mappings are verified
+- **Status:** complete for the MXF corpus plan
+- **Last updated:** 2026-09-02 (Waves 0–6 complete and verified)
 
 ## Funnel Progress
 
@@ -19,11 +19,11 @@
 |--------|--------|------|
 | **Define** | done | Corruption types mapped to VideoAnalyzer issues |
 | **Plan** | done | MXF corpus audit complete; implementation spec and policies approved |
-| **Build** | active | Waves 0–1 complete; Wave 2 BER/truncation fixtures are next |
+| **Build** | done | Waves 0–6 complete; controlled corpus is generated, mapped, and approved |
 
 ## Phase Progress
 ```
-[################....] 82% - 19 types + 4 features + 9 reliability fixes
+[####################] 100% - all 33 corpus tasks complete
 ```
 
 | Phase | Status | Tasks |
@@ -41,7 +41,7 @@
 |-----------|--------|-------|
 | Features | 🔶 WIP | 19 corruption types + seed/severity/stacking/batch |
 | UI/Polish | 🔶 WIP | AppKit buttons + toolbar style applied, toolbar rendering WIP |
-| Testing | 🔶 WIP | Wave 1 gate passes: 84 automated tests, 0 failures |
+| Testing | ✅ done | Wave 6 gate passes: 153 automated tests, 0 failures, 1 opt-in export skip |
 | Docs | ✅ done | MXF corpus audit and approved implementation spec recorded |
 | Distribution | ⚪ — | Dev tool, may not need distribution |
 
@@ -61,6 +61,26 @@
 None
 
 ## Latest Verification
+- **2026-09-02:** Wave 6 complete. PlayPlayPlay validates the separate adversarial manifest through
+  its real CBMX-backed structural path with stable errors, explicit resource budgets, and deterministic
+  cancellation. Nineteen project-owned fixtures are approved: 10 accepted and 9 exact rejections;
+  26 registry cases remain explicitly not applicable to the controlled source. VideoCorruptor builds
+  and all 153 tests pass, with only the opt-in export test skipped. PlayPlayPlay passes all 100 tests,
+  with three external-media tests skipped.
+- **2026-09-02:** Wave 5 complete. Project-owned OP1a and OP-Atom sources have pinned hashes and
+  rights provenance. The registry locks all 45 required cases; the controlled release generates
+  19 structurally verified fixtures and reports 26 explicit not-applicable reasons. Two independent
+  generations have identical trees and canonical manifests. Debug build succeeds and all 152 tests
+  pass. No fixture is consumer-approved before PlayPlayPlay mapping.
+- **2026-09-02:** Wave 4 complete. XcodeGen output is reproducible; Debug build succeeds; all
+  144 tests pass. Bounded local-set/primer and batch inspection, five count fixtures, minimum
+  index-table semantics, and seven field-aware index fixtures are verified with exact field spans.
+- **2026-09-01:** Wave 3 complete. XcodeGen output is reproducible; Debug build succeeds; all
+  118 tests pass. Partition classification/graph bounds, seven offset/cycle fixtures, profile-aware
+  missing header/footer/RIP behavior, and partition fixed-field truncation are verified.
+- **2026-09-01:** Wave 2 complete. XcodeGen output is reproducible; Debug build succeeds; all
+  95 tests pass. Fourteen BER/truncation fixture IDs and output hashes are pinned by the canonical
+  corpus golden; production corpus services retain bounded file I/O.
 - **2026-09-01:** Wave 1 complete. XcodeGen output is reproducible; Debug build succeeds; all
   84 tests pass. Bounded streaming inspection, exact mutation verification, streaming copy/hash,
   deterministic cancellation, and atomic rollback/publish are gated before fixture definitions.

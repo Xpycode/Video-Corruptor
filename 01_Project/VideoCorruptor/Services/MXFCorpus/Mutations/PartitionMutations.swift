@@ -178,8 +178,11 @@ private struct PartitionMutation: MXFFixtureMutation {
             return PartitionTarget(primary: selected, secondary: nil, replacement: selected.keySpan.lowerBound,
                                    classification: "partition.previousPartition:selfCycle")
         case .previousTwoNodeCycle:
-            guard partitions.count >= 2 else { return nil }
-            return PartitionTarget(primary: partitions[0], secondary: partitions[1], replacement: 0,
+            // Zero is the MXF sentinel for "no previous partition", so a header at physical
+            // offset zero cannot participate as a resolvable previous-link cycle node.
+            let cycleNodes = partitions.filter { $0.keySpan.lowerBound != 0 }
+            guard cycleNodes.count >= 2 else { return nil }
+            return PartitionTarget(primary: cycleNodes[0], secondary: cycleNodes[1], replacement: 0,
                                    classification: "partition.previousPartition:twoNodeCycle")
         }
     }

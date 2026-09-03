@@ -170,7 +170,10 @@ struct MXFCorpusGenerator: Sendable {
                     entries.append(try MXFFixtureManifestEntry(
                         id: definition.id,
                         corpusClass: definition.corpusClass,
-                        lifecycle: definition.lifecycle,
+                        // Reaching the manifest means copy, mutation, exact-diff verification,
+                        // postconditions, size, and hash checks all completed. Consumer mapping is
+                        // deliberately a later, cross-repository gate.
+                        lifecycle: .structurallyVerified,
                         mutationSchemaVersion: definition.mutationSchemaVersion,
                         source: sourceIdentity,
                         output: outputIdentity,
