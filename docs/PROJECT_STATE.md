@@ -9,9 +9,9 @@
 ## Current Position
 - **Funnel:** build
 - **Phase:** implementation
-- **Focus:** MXF adversarial corpus complete; macOS 26 toolbar rendering corrected and accepted
-- **Status:** ready for the remaining manual seed, mixed-format batch, and blocker-gating checks
-- **Last updated:** 2026-09-03 (toolbar accepted; full test suite green)
+- **Focus:** manual app-flow acceptance for seed reproducibility, mixed-format batch, and blocker gating
+- **Status:** first seed run passed; repeat hash comparison and the other two manual checks remain
+- **Last updated:** 2026-09-05 (Debug build green; first manual seed export confirmed)
 
 ## Funnel Progress
 
@@ -41,7 +41,7 @@
 |-----------|--------|-------|
 | Features | 🔶 WIP | 19 corruption types + seed/severity/stacking/batch |
 | UI/Polish | ✅ done | Compact SAR-style toolbar accepted on macOS 26 |
-| Testing | ✅ done | Wave 6 gate passes: 153 automated tests, 0 failures, 1 opt-in export skip |
+| Testing | 🔶 WIP | 153 automated tests pass; manual app-flow acceptance is in progress |
 | Docs | ✅ done | MXF corpus audit and approved implementation spec recorded |
 | Distribution | ⚪ — | Dev tool, may not need distribution |
 
@@ -61,6 +61,10 @@
 None
 
 ## Latest Verification
+- **2026-09-05:** The Debug app builds and the first manual reproducibility run produced a successful
+  Decode Error output with the requested seed. The output was present and different from the source;
+  its missing thumbnail and preserved old date made it easy to overlook. The repeat hash comparison,
+  mixed-format batch check, and blocker-gating check remain.
 - **2026-09-03:** The toolbar now uses the compact hidden-titlebar shell, 28-point SAR-style controls,
   correct leading/trailing placement, and macOS 26 shared-background suppression. Visual review passed;
   the Debug build succeeds and all 153 tests pass with the expected opt-in export skip.

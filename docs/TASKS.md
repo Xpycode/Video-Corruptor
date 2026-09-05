@@ -6,7 +6,7 @@
 <!-- Ideas and future work. Added by /interview, user input, or discovered during development. -->
 <!-- Priority: top = highest, bottom = lowest -->
 
-- [ ] [Task description]
+- [ ] Make “Reveal in Finder” select generated outputs; preserved source dates can otherwise bury newly created files (2026-09-05)
 
 ## Current Sprint
 <!-- Active work. Populated by /plan or /execute. Keep focused (3-7 tasks). -->
